@@ -1,6 +1,7 @@
 """Unit tests for enrichment engine."""
 
 import pytest
+import asyncio
 from app.enrichment.enrichment_engine import EnrichmentEngine
 
 
@@ -9,26 +10,18 @@ def enrichment_engine():
     return EnrichmentEngine()
 
 
-@pytest.fixture
-def sample_entities():
-    return {
-        "persons": ["Yogesh Khandge"],
-        "organizations": ["TechCorp Solutions", "Competitor Corp"],
-        "locations": ["Pune", "Maharashtra"],
-        "keywords": ["digital marketing", "SEO", "social media"]
-    }
-
-
-def test_enrich_basic(enrichment_engine, sample_entities):
+@pytest.mark.asyncio
+async def test_enrich_basic(enrichment_engine, sample_entities):
     """Test basic enrichment."""
-    result = enrichment_engine.enrich(
+    result = await enrichment_engine.enrich(
         entities=sample_entities,
         location="Pune, Maharashtra"
     )
     
-    assert "location" in result
-    assert "industry" in result
-    assert "competitors" in result
+    assert "entities" in result
+    assert "location_context" in result
+    assert "industry_context" in result
+    assert "competitive_context" in result
     assert "temporal_attributes" in result
 
 
@@ -40,12 +33,12 @@ def test_enrich_location(enrichment_engine):
     assert "state" in location_data
     assert "tier" in location_data
     assert "affluence_score" in location_data
-    assert location_data["tier"] in [1, 2, 3]
+    assert location_data["tier"] in ["Tier-1", "Tier-2", "Tier-3"]
 
 
 def test_enrich_industry(enrichment_engine, sample_entities):
     """Test industry enrichment."""
-    industry_data = enrichment_engine._enrich_industry(sample_entities["keywords"])
+    industry_data = enrichment_engine._enrich_industry(sample_entities)
     
     assert "primary_industry" in industry_data
     assert "secondary_industries" in industry_data

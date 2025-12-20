@@ -4,13 +4,18 @@ Database models and session management.
 
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, String, Integer, Float, DateTime, JSON, Boolean, Text, create_engine
+from sqlalchemy import Column, String, Integer, Float, DateTime, JSON, Boolean, Text, create_engine, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.pool import QueuePool, NullPool
 import uuid
+import logging
 
 from app.config import settings
+from app.constants import DB_POOL_SIZE, DB_MAX_OVERFLOW, DB_POOL_TIMEOUT
+
+logger = logging.getLogger(__name__)
 
 # Base class for models
 Base = declarative_base()
@@ -20,6 +25,10 @@ class Persona(Base):
     """Persona model storing generated personas."""
     
     __tablename__ = "personas"
+    __table_args__ = (
+        Index('idx_persona_person_created', 'person_id', 'created_at'),
+        Index('idx_persona_confidence', 'confidence_score'),
+    )
     
     persona_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     person_id = Column(String, nullable=False, index=True)
@@ -31,7 +40,7 @@ class Persona(Base):
     short_narrative = Column(String(500))  # 15-word summary
     
     # Metadata
-    confidence_score = Column(Float)
+    confidence_score = Column(Float, index=True)
     quality_issues = Column(JSON)
     generation_time_ms = Column(Integer)
     

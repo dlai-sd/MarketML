@@ -67,9 +67,12 @@ class PersonaGenerator:
         scores: Dict
     ) -> Dict:
         """Build structured persona data."""
-        # Extract key information
-        title = entities.get("titles", [None])[0]
-        company = entities.get("organizations", [None])[0]
+        # Extract key information safely
+        titles = entities.get("titles", [])
+        title = titles[0] if titles else None
+        
+        organizations = entities.get("organizations", [])
+        company = organizations[0] if organizations else None
         
         return {
             "name": name,

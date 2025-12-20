@@ -4,7 +4,7 @@ API v1 routes.
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import personas, feedback, jobs
+from app.api.v1.endpoints import personas, feedback, jobs, performance
 
 api_router = APIRouter()
 
@@ -12,3 +12,4 @@ api_router = APIRouter()
 api_router.include_router(personas.router, prefix="/personas", tags=["personas"])
 api_router.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
+api_router.include_router(performance.router, prefix="/performance", tags=["performance"])

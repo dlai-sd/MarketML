@@ -5,6 +5,7 @@ from pathlib import Path
 import sqlite3
 import logging
 from contextlib import contextmanager
+from functools import lru_cache
 
 from app.constants import (
     ENRICHMENT_DB_LOCATIONS,
@@ -14,6 +15,7 @@ from app.constants import (
     TIER_1_CITIES,
     TIER_2_CITIES
 )
+from app.utils.performance import timer, log_slow_queries
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +33,22 @@ class EnrichmentEngine:
         
         # Ensure parent directory exists
         self.locations_db.parent.mkdir(parents=True, exist_ok=True)
+        
+        # In-memory cache for frequently accessed data
+        self._location_cache = {}
+        self._industry_cache = {}
     
     @contextmanager
     def _get_connection(self, db_path: Path):
-        """Context manager for database connections."""
+        """Context manager for database connections with optimizations."""
         conn = None
         try:
             conn = sqlite3.connect(db_path)
+            # Enable performance optimizations
+            conn.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging
+            conn.execute("PRAGMA synchronous=NORMAL")  # Faster writes
+            conn.execute("PRAGMA cache_size=10000")  # 10MB cache
+            conn.execute("PRAGMA temp_store=MEMORY")  # Use memory for temp
             yield conn
         finally:
             if conn:

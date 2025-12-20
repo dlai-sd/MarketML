@@ -17,6 +17,7 @@ from app.features.feature_engineer import FeatureEngineer
 from app.scoring.ensemble_scorer import EnsembleScorer
 from app.generation.persona_generator import PersonaGenerator
 from app.validation.quality_validator import QualityValidator
+from app.utils.performance import timer, monitor
 
 logger = logging.getLogger(__name__)
 
