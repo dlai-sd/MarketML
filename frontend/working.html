@@ -307,6 +307,30 @@
                 const loc = s.location || {};
                 const scores = s.scores || {};
                 
+                // Format insights list
+                let insightsHTML = '';
+                if (p.marketing_insights && p.marketing_insights.length > 0) {
+                    insightsHTML = '<ul style="margin: 8px 0; padding-left: 20px; color: #6b7280;">';
+                    p.marketing_insights.forEach(insight => {
+                        insightsHTML += `<li style="margin: 4px 0;">${insight}</li>`;
+                    });
+                    insightsHTML += '</ul>';
+                } else {
+                    insightsHTML = '<p style="color: #9ca3af;">No insights available</p>';
+                }
+                
+                // Format recommendations list
+                let recsHTML = '';
+                if (p.recommended_actions && p.recommended_actions.length > 0) {
+                    recsHTML = '<ul style="margin: 8px 0; padding-left: 20px; color: #6b7280;">';
+                    p.recommended_actions.forEach(rec => {
+                        recsHTML += `<li style="margin: 4px 0;">${rec}</li>`;
+                    });
+                    recsHTML += '</ul>';
+                } else {
+                    recsHTML = '<p style="color: #9ca3af;">No recommendations available</p>';
+                }
+                
                 data.innerHTML = `
                     <p><strong>Name:</strong> ${s.name || 'N/A'}</p>
                     <p><strong>Location:</strong> ${loc.city || 'N/A'}, ${loc.state || 'N/A'}</p>
@@ -317,8 +341,14 @@
                     <p><strong>Budget Capacity:</strong> ${scores.budget_capacity?.toFixed(1) || 0}/100</p>
                     <p><strong>Tier:</strong> ${scores.recommended_tier || 'N/A'}</p>
                     <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e5e7eb;">
-                    <p><strong>Narrative:</strong></p>
-                    <p style="color: #6b7280;">${p.narrative || 'N/A'}</p>
+                    <p><strong>📝 Short Summary:</strong></p>
+                    <p style="color: #6b7280; font-style: italic; margin-bottom: 12px;">${p.short_narrative || 'N/A'}</p>
+                    <p><strong>📖 Full Narrative:</strong></p>
+                    <p style="color: #6b7280; line-height: 1.6; margin-bottom: 12px;">${p.narrative || 'N/A'}</p>
+                    <p><strong>💡 Marketing Insights:</strong></p>
+                    ${insightsHTML}
+                    <p style="margin-top: 12px;"><strong>🎯 Recommended Actions:</strong></p>
+                    ${recsHTML}
                 `;
 
                 btn.disabled = false;
