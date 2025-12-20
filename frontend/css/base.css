@@ -194,23 +194,27 @@ html, body {
 .page-navigation {
     position: absolute;
     bottom: var(--space-lg);
-    left: var(--space-xl);
-    right: var(--space-xl);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-md);
+    left: 0;
+    right: 0;
+    width: 100%;
     z-index: var(--z-fixed);
 }
 
 .btn-back,
 .btn-home {
+    position: absolute;
+    bottom: 0;
+    left: var(--space-xl);
+    width: 10%;
     margin: 0;
 }
 
 .btn-next {
+    position: absolute;
+    bottom: 0;
+    right: var(--space-xl);
+    width: 10%;
     margin: 0;
-    margin-left: auto; /* Push to right */
 }
 
 /* Card component - legacy, content now in container */
