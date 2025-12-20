@@ -6,8 +6,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from prometheus_client import make_asgi_app
 import logging
+import os
 
 from app.config import settings
 from app.api.v1 import api_router
@@ -65,6 +67,12 @@ app.add_middleware(
 # Include API router
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 
+# Serve frontend static files (eliminates CORS issues - same origin)
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+    logger.info(f"Frontend static files mounted from: {frontend_path}")
+
 # Prometheus metrics endpoint
 if settings.enable_monitoring:
     metrics_app = make_asgi_app()
@@ -86,11 +94,27 @@ async def health_check():
 
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """Root endpoint - redirects to frontend."""
+    # Detect environment and construct URLs
+    codespace_name = os.getenv("CODESPACE_NAME")
+    domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "app.github.dev")
+    
+    if codespace_name:
+        # CodeSpace environment
+        base_url = f"https://{codespace_name}-8000.{domain}"
+    else:
+        # Local development
+        base_url = f"http://localhost:{settings.api_port}"
+    
     return {
         "message": "MarketML Persona Builder API",
         "version": "0.1.0",
-        "docs": f"{settings.api_v1_prefix}/docs"
+        "environment": settings.app_env,
+        "urls": {
+            "frontend": f"{base_url}/static/index.html",
+            "api_docs": f"{base_url}{settings.api_v1_prefix}/docs",
+            "health": f"{base_url}/health"
+        }
     }
 
 

@@ -34,6 +34,13 @@ class Settings(BaseSettings):
         min_length=20
     )
     
+    # CodeSpace Detection (for URL generation)
+    codespace_name: Optional[str] = Field(default=None, alias="CODESPACE_NAME")
+    github_codespaces_port_forwarding_domain: Optional[str] = Field(
+        default="app.github.dev", 
+        alias="GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN"
+    )
+    
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key_production(cls, v: str, info) -> str:
