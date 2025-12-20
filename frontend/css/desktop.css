@@ -1,0 +1,322 @@
+/* ========================================
+   MarketML - Desktop Responsive Styles
+   ========================================
+   
+   Desktop and large screen optimizations
+   Applies to screens >= 768px
+*/
+
+/* ==================== Tablet (768px - 1023px) ==================== */
+@media (min-width: 768px) {
+    
+    /* Container */
+    .container {
+        max-width: var(--container-tablet);
+        padding: var(--space-lg);
+    }
+    
+    /* Header */
+    .header {
+        margin-bottom: var(--space-2xl);
+    }
+    
+    .header h1 {
+        font-size: var(--font-size-4xl);
+    }
+    
+    .header p {
+        font-size: var(--font-size-xl);
+    }
+    
+    /* Card */
+    .card {
+        padding: var(--space-2xl);
+    }
+    
+    /* Two column grid for scores */
+    .scores-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-lg);
+    }
+    
+    /* Progress steps in 4 columns */
+    .progress-steps {
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-md);
+    }
+    
+    /* Buttons side by side */
+    .button-group {
+        display: flex;
+        gap: var(--space-md);
+    }
+    
+    .button-group .btn {
+        width: auto;
+        min-width: 200px;
+    }
+    
+    /* Form improvements */
+    .form-row {
+        display: flex;
+        gap: var(--space-md);
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+    }
+    
+    /* Hide on tablet/desktop */
+    .hide-tablet {
+        display: none !important;
+    }
+    
+    /* Show only on tablet/desktop */
+    .show-tablet {
+        display: block !important;
+    }
+}
+
+/* ==================== Desktop (1024px - 1279px) ==================== */
+@media (min-width: 1024px) {
+    
+    /* Container */
+    .container {
+        max-width: var(--container-desktop);
+        padding: var(--space-xl);
+    }
+    
+    /* Header */
+    .header h1 {
+        font-size: var(--font-size-5xl);
+    }
+    
+    /* Card with more padding */
+    .card {
+        padding: var(--space-3xl);
+    }
+    
+    /* Three column grid for scores */
+    .scores-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-xl);
+    }
+    
+    /* Progress steps in 8 columns */
+    .progress-steps {
+        grid-template-columns: repeat(8, 1fr);
+    }
+    
+    /* Form enhancements */
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-lg);
+    }
+    
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-lg);
+    }
+    
+    /* Persona header */
+    .persona-header {
+        padding: var(--space-2xl) var(--space-3xl);
+    }
+    
+    .persona-header h2 {
+        font-size: var(--font-size-4xl);
+    }
+    
+    /* Sections with better spacing */
+    .section {
+        margin-bottom: var(--space-2xl);
+    }
+    
+    .section h3 {
+        font-size: var(--font-size-2xl);
+        margin-bottom: var(--space-lg);
+    }
+    
+    /* Lists */
+    .insights-list li,
+    .actions-list li {
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-relaxed);
+        margin-bottom: var(--space-md);
+    }
+    
+    /* Narrative */
+    .narrative {
+        font-size: var(--font-size-lg);
+        line-height: var(--line-height-relaxed);
+    }
+    
+    /* Hover effects for desktop */
+    .card {
+        transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+    }
+    
+    .btn {
+        transition: all var(--transition-base);
+    }
+    
+    /* Hide on desktop */
+    .hide-desktop {
+        display: none !important;
+    }
+    
+    /* Show only on desktop */
+    .show-desktop {
+        display: block !important;
+    }
+}
+
+/* ==================== Large Desktop (>= 1280px) ==================== */
+@media (min-width: 1280px) {
+    
+    /* Container at max width */
+    .container {
+        max-width: var(--frame-max-width);
+    }
+    
+    /* Even more spacious */
+    .card {
+        padding: var(--space-3xl);
+    }
+    
+    /* Four column option for grids */
+    .grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    /* Wider buttons */
+    .button-group .btn {
+        min-width: 240px;
+    }
+}
+
+/* ==================== Ultra-wide (>= 1536px) ==================== */
+@media (min-width: 1536px) {
+    
+    /* Container stays at max but with more breathing room */
+    body {
+        padding: var(--space-2xl) 0;
+    }
+    
+    .container {
+        max-width: var(--frame-max-width);
+    }
+    
+    /* Larger typography */
+    .header h1 {
+        font-size: 64px;
+    }
+    
+    /* Hide on ultra-wide if needed */
+    .hide-wide {
+        display: none !important;
+    }
+}
+
+/* ==================== Print Styles ==================== */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .header {
+        background: white;
+        color: black;
+    }
+    
+    .btn,
+    .progress-container,
+    .error-message {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+        page-break-inside: avoid;
+    }
+    
+    .persona-header {
+        background: white !important;
+        color: black !important;
+        border-bottom: 2px solid #e5e7eb;
+    }
+}
+
+/* ==================== High DPI Displays ==================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Optimize for retina displays */
+    .icon,
+    .step-icon {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* ==================== Reduced Motion ==================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ==================== Dark Mode Support ==================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-primary: #f3f4f6;
+        --text-secondary: #d1d5db;
+        --text-light: #9ca3af;
+        --bg-primary: #1f2937;
+        --bg-secondary: #111827;
+        --bg-tertiary: #374151;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #1e3a8a 0%, #581c87 100%);
+    }
+    
+    .card {
+        background: var(--bg-primary);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .form-control,
+    .form-group input,
+    .form-group textarea {
+        background: var(--bg-secondary);
+        border-color: var(--bg-tertiary);
+        color: var(--text-primary);
+    }
+    
+    .score-card {
+        background: var(--bg-secondary);
+    }
+    
+    .progress-step {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    
+    .progress-step.active {
+        background: #1e3a8a;
+        border-color: #3b82f6;
+    }
+}
