@@ -6,6 +6,19 @@
 
 MarketML is a sophisticated ML system that builds comprehensive business personas from multi-source data aggregation, intelligent analysis, and predictive modeling. Designed for digital marketing agencies serving SMBs (0-1Cr revenue), it automates persona generation with 20-30 second latency while maintaining high accuracy.
 
+## 📚 Documentation Hub
+
+**New to MarketML? Start here:**
+
+- 🚀 **[Quick Reference](QUICK_REFERENCE.md)** - Get started in 2 minutes
+- 📊 **[Status Snapshot](STATUS_SNAPSHOT.md)** - Visual project status dashboard
+- 📋 **[Executive Summary](EXECUTIVE_SUMMARY.md)** - For stakeholders and decision-makers
+- 📖 **[Getting Up to Speed](GETTING_UP_TO_SPEED.md)** - Comprehensive project overview (30 min read)
+- ⚡ **[Quick Start Guide](QUICKSTART.md)** - Step-by-step setup and testing
+- 📈 **[Progress Log](PROGRESS.md)** - Development history and milestones
+
+**Current Status:** 95% Complete | 71 files | 8,100+ lines | Ready for testing
+
 ## 🎯 Key Features
 
 - **Multi-Source Data Aggregation**: Scrapes LinkedIn, company websites, and news sources in parallel
