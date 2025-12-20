@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketml-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      - redis
+      - qdrant
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketml-celery-worker
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      - redis
+      - api
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketml-celery-beat
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: marketml-redis
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: marketml-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: marketml-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: marketml-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: marketml-frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
+    networks:
+      - marketml-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  qdrant-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  marketml-network:
+    driver: bridge

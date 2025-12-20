@@ -1,0 +1,446 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.1, pytest-9.0.2, pluggy-1.6.0 -- /home/codespace/.python/current/bin/python
+cachedir: .pytest_cache
+rootdir: /workspaces/MarketML
+configfile: pytest.ini
+plugins: anyio-4.11.0, cov-7.0.0, asyncio-1.3.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 45 items
+
+tests/unit/test_enrichment.py::test_enrich_basic FAILED                  [  2%]
+tests/unit/test_enrichment.py::test_enrich_location FAILED               [  4%]
+tests/unit/test_enrichment.py::test_enrich_industry FAILED               [  6%]
+tests/unit/test_enrichment.py::test_temporal_attributes FAILED           [  8%]
+tests/unit/test_enrichment.py::test_enrich_with_empty_entities FAILED    [ 11%]
+tests/unit/test_enrichment.py::test_tier_calculation FAILED              [ 13%]
+tests/unit/test_enrichment.py::test_affluence_scoring PASSED             [ 15%]
+tests/unit/test_extractor.py::test_extract_from_linkedin FAILED          [ 17%]
+tests/unit/test_extractor.py::test_extract_from_company FAILED           [ 20%]
+tests/unit/test_extractor.py::test_deduplicate_entities FAILED           [ 22%]
+tests/unit/test_extractor.py::test_extract_from_all_sources FAILED       [ 24%]
+tests/unit/test_extractor.py::test_empty_scraped_data FAILED             [ 26%]
+tests/unit/test_extractor.py::test_failed_scraping FAILED                [ 28%]
+tests/unit/test_features.py::test_compute_features FAILED                [ 31%]
+tests/unit/test_features.py::test_business_maturity_features FAILED      [ 33%]
+tests/unit/test_features.py::test_digital_presence_features FAILED       [ 35%]
+tests/unit/test_features.py::test_location_features FAILED               [ 37%]
+tests/unit/test_features.py::test_network_features FAILED                [ 40%]
+tests/unit/test_features.py::test_empty_data FAILED                      [ 42%]
+tests/unit/test_features.py::test_feature_normalization FAILED           [ 44%]
+tests/unit/test_generator.py::test_generate_persona FAILED               [ 46%]
+tests/unit/test_generator.py::test_structured_data FAILED                [ 48%]
+tests/unit/test_generator.py::test_narrative_generation FAILED           [ 51%]
+tests/unit/test_generator.py::test_short_narrative FAILED                [ 53%]
+tests/unit/test_generator.py::test_insights_generation FAILED            [ 55%]
+tests/unit/test_generator.py::test_actions_generation FAILED             [ 57%]
+tests/unit/test_generator.py::test_tier_specific_actions FAILED          [ 60%]
+tests/unit/test_generator.py::test_empty_data_handling FAILED            [ 62%]
+tests/unit/test_generator.py::test_narrative_length FAILED               [ 64%]
+tests/unit/test_scorer.py::test_score_computation FAILED                 [ 66%]
+tests/unit/test_scorer.py::test_rule_based_scoring FAILED                [ 68%]
+tests/unit/test_scorer.py::test_tier_recommendation FAILED               [ 71%]
+tests/unit/test_scorer.py::test_score_consistency FAILED                 [ 73%]
+tests/unit/test_scorer.py::test_edge_cases FAILED                        [ 75%]
+tests/unit/test_scorer.py::test_revenue_parsing FAILED                   [ 77%]
+tests/unit/test_validator.py::test_valid_persona FAILED                  [ 80%]
+tests/unit/test_validator.py::test_missing_required_fields FAILED        [ 82%]
+tests/unit/test_validator.py::test_score_range_validation FAILED         [ 84%]
+tests/unit/test_validator.py::test_narrative_length_validation FAILED    [ 86%]
+tests/unit/test_validator.py::test_short_narrative_validation FAILED     [ 88%]
+tests/unit/test_validator.py::test_insights_validation FAILED            [ 91%]
+tests/unit/test_validator.py::test_actions_validation FAILED             [ 93%]
+tests/unit/test_validator.py::test_tier_consistency FAILED               [ 95%]
+tests/unit/test_validator.py::test_empty_persona PASSED                  [ 97%]
+tests/unit/test_validator.py::test_multiple_issues PASSED                [100%]<string>:2: RuntimeWarning: coroutine 'EntityExtractor.extract_from_scraped_data' was never awaited
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+<string>:2: RuntimeWarning: coroutine 'PersonaGenerator.generate' was never awaited
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+
+
+=================================== FAILURES ===================================
+______________________________ test_enrich_basic _______________________________
+tests/unit/test_enrichment.py:29: in test_enrich_basic
+    assert "location" in result
+           ^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'coroutine' is not iterable
+_____________________________ test_enrich_location _____________________________
+tests/unit/test_enrichment.py:43: in test_enrich_location
+    assert location_data["tier"] in [1, 2, 3]
+E   AssertionError: assert 'Tier-1' in [1, 2, 3]
+_____________________________ test_enrich_industry _____________________________
+tests/unit/test_enrichment.py:48: in test_enrich_industry
+    industry_data = enrichment_engine._enrich_industry(sample_entities["keywords"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/enrichment/enrichment_engine.py:139: in _enrich_industry
+    keywords = entities.get("keywords", [])
+               ^^^^^^^^^^^^
+E   AttributeError: 'list' object has no attribute 'get'
+___________________________ test_temporal_attributes ___________________________
+tests/unit/test_enrichment.py:58: in test_temporal_attributes
+    temporal = enrichment_engine._compute_temporal_attributes(
+E   TypeError: EnrichmentEngine._compute_temporal_attributes() takes 2 positional arguments but 3 were given
+_______________________ test_enrich_with_empty_entities ________________________
+tests/unit/test_enrichment.py:84: in test_enrich_with_empty_entities
+    assert "location" in result
+           ^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'coroutine' is not iterable
+____________________________ test_tier_calculation _____________________________
+tests/unit/test_enrichment.py:95: in test_tier_calculation
+    assert location["tier"] == 1
+E   AssertionError: assert 'Tier-1' == 1
+__________________________ test_extract_from_linkedin __________________________
+tests/unit/test_extractor.py:45: in test_extract_from_linkedin
+    entities = extractor._extract_from_linkedin(sample_scraped_data["linkedin"]["data"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: EntityExtractor._extract_from_linkedin() missing 1 required positional argument: 'entities'
+__________________________ test_extract_from_company ___________________________
+tests/unit/test_extractor.py:56: in test_extract_from_company
+    entities = extractor._extract_from_company(sample_scraped_data["company"]["data"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: EntityExtractor._extract_from_company() missing 1 required positional argument: 'entities'
+__________________________ test_deduplicate_entities ___________________________
+tests/unit/test_extractor.py:66: in test_deduplicate_entities
+    deduplicated = extractor._deduplicate_entities(entities)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/extractors/entity_extractor.py:151: in _deduplicate_entities
+    entities["contact"]["emails"] = list(set(entities["contact"]["emails"]))
+                                             ^^^^^^^^^^^^^^^^^^^
+E   TypeError: list indices must be integers or slices, not str
+________________________ test_extract_from_all_sources _________________________
+tests/unit/test_extractor.py:77: in test_extract_from_all_sources
+    assert "entities" in result
+           ^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'coroutine' is not iterable
+___________________________ test_empty_scraped_data ____________________________
+tests/unit/test_extractor.py:89: in test_empty_scraped_data
+    assert result["entities"]["persons"] == []
+           ^^^^^^^^^^^^^^^^^^
+E   TypeError: 'coroutine' object is not subscriptable
+_____________________________ test_failed_scraping _____________________________
+tests/unit/test_extractor.py:104: in test_failed_scraping
+    assert "entities" in result
+           ^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'coroutine' is not iterable
+____________________________ test_compute_features _____________________________
+tests/unit/test_features.py:53: in test_compute_features
+    features = feature_engineer.compute_features(sample_entities, sample_enrichment)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: FeatureEngineer.compute_features() takes 2 positional arguments but 3 were given
+_______________________ test_business_maturity_features ________________________
+tests/unit/test_features.py:68: in test_business_maturity_features
+    features = feature_engineer._compute_maturity_features(sample_entities)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'FeatureEngineer' object has no attribute '_compute_maturity_features'
+________________________ test_digital_presence_features ________________________
+tests/unit/test_features.py:78: in test_digital_presence_features
+    features = feature_engineer._compute_digital_features(sample_entities)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'FeatureEngineer' object has no attribute '_compute_digital_features'
+____________________________ test_location_features ____________________________
+tests/unit/test_features.py:87: in test_location_features
+    features = feature_engineer._compute_location_features(sample_enrichment["location"])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'FeatureEngineer' object has no attribute '_compute_location_features'
+____________________________ test_network_features _____________________________
+tests/unit/test_features.py:97: in test_network_features
+    features = feature_engineer._compute_network_features(sample_entities)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'FeatureEngineer' object has no attribute '_compute_network_features'
+_______________________________ test_empty_data ________________________________
+tests/unit/test_features.py:105: in test_empty_data
+    features = feature_engineer.compute_features(
+E   TypeError: FeatureEngineer.compute_features() takes 2 positional arguments but 3 were given
+__________________________ test_feature_normalization __________________________
+tests/unit/test_features.py:116: in test_feature_normalization
+    features = feature_engineer.compute_features(sample_entities, sample_enrichment)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: FeatureEngineer.compute_features() takes 2 positional arguments but 3 were given
+____________________________ test_generate_persona _____________________________
+tests/unit/test_generator.py:57: in test_generate_persona
+    assert "structured" in persona
+           ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'coroutine' is not iterable
+_____________________________ test_structured_data _____________________________
+tests/unit/test_generator.py:72: in test_structured_data
+    structured = persona["structured"]
+                 ^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'coroutine' object is not subscriptable
+__________________________ test_narrative_generation ___________________________
+tests/unit/test_generator.py:82: in test_narrative_generation
+    narrative = generator._generate_narrative(
+E   TypeError: PersonaGenerator._generate_narrative() takes 3 positional arguments but 4 were given
+_____________________________ test_short_narrative _____________________________
+tests/unit/test_generator.py:95: in test_short_narrative
+    short = generator._generate_short_narrative(
+E   TypeError: PersonaGenerator._generate_short_narrative() takes 2 positional arguments but 4 were given
+___________________________ test_insights_generation ___________________________
+tests/unit/test_generator.py:108: in test_insights_generation
+    insights = generator._generate_insights(
+app/generation/persona_generator.py:197: in _generate_insights
+    affluence = structured["location"].get("affluence_score", 5.0)
+                ^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'location'
+___________________________ test_actions_generation ____________________________
+tests/unit/test_generator.py:121: in test_actions_generation
+    actions = generator._generate_actions(sample_data["scores"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'PersonaGenerator' object has no attribute '_generate_actions'. Did you mean: '_generate_intro'?
+__________________________ test_tier_specific_actions __________________________
+tests/unit/test_generator.py:130: in test_tier_specific_actions
+    tier0_actions = generator._generate_actions({"recommended_tier": 0})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'PersonaGenerator' object has no attribute '_generate_actions'. Did you mean: '_generate_intro'?
+___________________________ test_empty_data_handling ___________________________
+tests/unit/test_generator.py:146: in test_empty_data_handling
+    assert "structured" in persona
+           ^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: argument of type 'coroutine' is not iterable
+____________________________ test_narrative_length _____________________________
+tests/unit/test_generator.py:152: in test_narrative_length
+    narrative = generator._generate_narrative(
+E   TypeError: PersonaGenerator._generate_narrative() takes 3 positional arguments but 4 were given
+____________________________ test_score_computation ____________________________
+tests/unit/test_scorer.py:44: in test_score_computation
+    result = scorer.score(sample_features, sample_enrichment)
+             ^^^^^^^^^^^^
+E   AttributeError: 'EnsembleScorer' object has no attribute 'score'
+------------------------------ Captured log setup ------------------------------
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/xgboost_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/rf_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/linear_v1.pkl
+___________________________ test_rule_based_scoring ____________________________
+tests/unit/test_scorer.py:62: in test_rule_based_scoring
+    result = scorer._rule_based_scoring(sample_features, sample_enrichment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: EnsembleScorer._rule_based_scoring() takes 2 positional arguments but 3 were given
+------------------------------ Captured log setup ------------------------------
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/xgboost_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/rf_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/linear_v1.pkl
+___________________________ test_tier_recommendation ___________________________
+tests/unit/test_scorer.py:72: in test_tier_recommendation
+    tier = scorer._recommend_tier(high_scores)
+           ^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'EnsembleScorer' object has no attribute '_recommend_tier'
+------------------------------ Captured log setup ------------------------------
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/xgboost_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/rf_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/linear_v1.pkl
+____________________________ test_score_consistency ____________________________
+tests/unit/test_scorer.py:83: in test_score_consistency
+    result1 = scorer.score(sample_features, sample_enrichment)
+              ^^^^^^^^^^^^
+E   AttributeError: 'EnsembleScorer' object has no attribute 'score'
+------------------------------ Captured log setup ------------------------------
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/xgboost_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/rf_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/linear_v1.pkl
+_______________________________ test_edge_cases ________________________________
+tests/unit/test_scorer.py:100: in test_edge_cases
+    result = scorer.score(empty_features, {})
+             ^^^^^^^^^^^^
+E   AttributeError: 'EnsembleScorer' object has no attribute 'score'
+------------------------------ Captured log setup ------------------------------
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/xgboost_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/rf_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/linear_v1.pkl
+_____________________________ test_revenue_parsing _____________________________
+tests/unit/test_scorer.py:120: in test_revenue_parsing
+    result = scorer._rule_based_scoring(features, enrichment)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: EnsembleScorer._rule_based_scoring() takes 2 positional arguments but 3 were given
+------------------------------ Captured log setup ------------------------------
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/xgboost_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/rf_v1.pkl
+WARNING  app.scoring.ensemble_scorer:ensemble_scorer.py:120 Model file not found: models/linear_v1.pkl
+______________________________ test_valid_persona ______________________________
+tests/unit/test_validator.py:43: in test_valid_persona
+    is_valid, issues = validator.validate(valid_persona)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+_________________________ test_missing_required_fields _________________________
+tests/unit/test_validator.py:54: in test_missing_required_fields
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+_________________________ test_score_range_validation __________________________
+tests/unit/test_validator.py:65: in test_score_range_validation
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+_______________________ test_narrative_length_validation _______________________
+tests/unit/test_validator.py:76: in test_narrative_length_validation
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+_______________________ test_short_narrative_validation ________________________
+tests/unit/test_validator.py:87: in test_short_narrative_validation
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+___________________________ test_insights_validation ___________________________
+tests/unit/test_validator.py:98: in test_insights_validation
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+___________________________ test_actions_validation ____________________________
+tests/unit/test_validator.py:109: in test_actions_validation
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+____________________________ test_tier_consistency _____________________________
+tests/unit/test_validator.py:123: in test_tier_consistency
+    is_valid, issues = validator.validate(invalid)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:32: in validate
+    issues.extend(self._check_consistency(persona_data))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/validation/quality_validator.py:94: in _check_consistency
+    city = location.get("city", "")
+           ^^^^^^^^^^^^
+E   AttributeError: 'str' object has no attribute 'get'
+=============================== warnings summary ===============================
+tests/unit/test_extractor.py::test_extract_from_linkedin
+  /usr/local/python/3.12.1/lib/python3.12/site-packages/spacy/lang/en/tokenizer_exceptions.py:94: RuntimeWarning: coroutine 'EnrichmentEngine.enrich' was never awaited
+    _exc[orth + "dve"] = [
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/test_extractor.py::test_failed_scraping
+  /usr/local/python/3.12.1/lib/python3.12/site-packages/spacy/util.py:1412: RuntimeWarning: coroutine 'EntityExtractor.extract_from_scraped_data' was never awaited
+    def from_dict(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.1-final-0 ________________
+
+Name                                       Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------
+app/__init__.py                                2      0   100%
+app/api/__init__.py                            0      0   100%
+app/api/v1/__init__.py                         6      6     0%   5-14
+app/api/v1/endpoints/__init__.py               0      0   100%
+app/api/v1/endpoints/feedback.py              14     14     0%   5-36
+app/api/v1/endpoints/jobs.py                  13     13     0%   5-29
+app/api/v1/endpoints/personas.py              32     32     0%   5-106
+app/config.py                                 62     62     0%   6-128
+app/constants.py                              57      0   100%
+app/core/__init__.py                           0      0   100%
+app/core/database.py                          89     89     0%   5-175
+app/core/schemas.py                           74     74     0%   5-165
+app/enrichment/__init__.py                     0      0   100%
+app/enrichment/enrichment_engine.py          133     64    52%   49-50, 58-63, 76-86, 122-123, 140-169, 180-194, 203-216, 220-238, 242-298, 310, 320, 333, 337-354
+app/extractors/__init__.py                     0      0   100%
+app/extractors/entity_extractor.py            87     69    21%   21-23, 35-72, 76-92, 96-117, 121-134, 141-148, 152-154
+app/features/__init__.py                       0      0   100%
+app/features/feature_engineer.py              70     60    14%   25-93, 97-100, 104-109, 113-127, 131-143
+app/generation/__init__.py                     0      0   100%
+app/generation/persona_generator.py          130    109    16%   32-53, 71-74, 107-121, 125-132, 136-145, 149-156, 160-171, 175-181, 194, 198-213, 217-238, 242-255, 259-268, 272-279
+app/main.py                                   35     35     0%   5-99
+app/scoring/__init__.py                        0      0   100%
+app/scoring/ensemble_scorer.py                44     22    50%   36-47, 55-93, 113-118
+app/scrapers/__init__.py                       0      0   100%
+app/scrapers/base_scraper.py                  72     72     0%   5-139
+app/scrapers/company_scraper.py               62     62     0%   5-174
+app/scrapers/company_scraper_enhanced.py     105    105     0%   3-208
+app/scrapers/google_scraper.py                49     49     0%   3-102
+app/scrapers/linkedin_scraper.py               8      8     0%   5-51
+app/scrapers/news_scraper.py                  10     10     0%   5-59
+app/scrapers/news_scraper_enhanced.py         82     82     0%   3-170
+app/scrapers/orchestrator.py                  58     58     0%   5-159
+app/tasks/__init__.py                          4      4     0%   5-17
+app/tasks/persona_generation.py               84     84     0%   5-195
+app/validation/__init__.py                     0      0   100%
+app/validation/quality_validator.py           76     10    87%   44, 66, 76, 96, 121-122, 128-129, 135, 139
+------------------------------------------------------------------------
+TOTAL                                       1458   1193    18%
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+=========================== short test summary info ============================
+FAILED tests/unit/test_enrichment.py::test_enrich_basic - TypeError: argument of type 'coroutine' is not iterable
+FAILED tests/unit/test_enrichment.py::test_enrich_location - AssertionError: assert 'Tier-1' in [1, 2, 3]
+FAILED tests/unit/test_enrichment.py::test_enrich_industry - AttributeError: 'list' object has no attribute 'get'
+FAILED tests/unit/test_enrichment.py::test_temporal_attributes - TypeError: EnrichmentEngine._compute_temporal_attributes() takes 2 positional arguments but 3 were given
+FAILED tests/unit/test_enrichment.py::test_enrich_with_empty_entities - TypeError: argument of type 'coroutine' is not iterable
+FAILED tests/unit/test_enrichment.py::test_tier_calculation - AssertionError: assert 'Tier-1' == 1
+FAILED tests/unit/test_extractor.py::test_extract_from_linkedin - TypeError: EntityExtractor._extract_from_linkedin() missing 1 required positional argument: 'entities'
+FAILED tests/unit/test_extractor.py::test_extract_from_company - TypeError: EntityExtractor._extract_from_company() missing 1 required positional argument: 'entities'
+FAILED tests/unit/test_extractor.py::test_deduplicate_entities - TypeError: list indices must be integers or slices, not str
+FAILED tests/unit/test_extractor.py::test_extract_from_all_sources - TypeError: argument of type 'coroutine' is not iterable
+FAILED tests/unit/test_extractor.py::test_empty_scraped_data - TypeError: 'coroutine' object is not subscriptable
+FAILED tests/unit/test_extractor.py::test_failed_scraping - TypeError: argument of type 'coroutine' is not iterable
+FAILED tests/unit/test_features.py::test_compute_features - TypeError: FeatureEngineer.compute_features() takes 2 positional arguments but 3 were given
+FAILED tests/unit/test_features.py::test_business_maturity_features - AttributeError: 'FeatureEngineer' object has no attribute '_compute_maturity_features'
+FAILED tests/unit/test_features.py::test_digital_presence_features - AttributeError: 'FeatureEngineer' object has no attribute '_compute_digital_features'
+FAILED tests/unit/test_features.py::test_location_features - AttributeError: 'FeatureEngineer' object has no attribute '_compute_location_features'
+FAILED tests/unit/test_features.py::test_network_features - AttributeError: 'FeatureEngineer' object has no attribute '_compute_network_features'
+FAILED tests/unit/test_features.py::test_empty_data - TypeError: FeatureEngineer.compute_features() takes 2 positional arguments but 3 were given
+FAILED tests/unit/test_features.py::test_feature_normalization - TypeError: FeatureEngineer.compute_features() takes 2 positional arguments but 3 were given
+FAILED tests/unit/test_generator.py::test_generate_persona - TypeError: argument of type 'coroutine' is not iterable
+FAILED tests/unit/test_generator.py::test_structured_data - TypeError: 'coroutine' object is not subscriptable
+FAILED tests/unit/test_generator.py::test_narrative_generation - TypeError: PersonaGenerator._generate_narrative() takes 3 positional arguments but 4 were given
+FAILED tests/unit/test_generator.py::test_short_narrative - TypeError: PersonaGenerator._generate_short_narrative() takes 2 positional arguments but 4 were given
+FAILED tests/unit/test_generator.py::test_insights_generation - KeyError: 'location'
+FAILED tests/unit/test_generator.py::test_actions_generation - AttributeError: 'PersonaGenerator' object has no attribute '_generate_actions'. Did you mean: '_generate_intro'?
+FAILED tests/unit/test_generator.py::test_tier_specific_actions - AttributeError: 'PersonaGenerator' object has no attribute '_generate_actions'. Did you mean: '_generate_intro'?
+FAILED tests/unit/test_generator.py::test_empty_data_handling - TypeError: argument of type 'coroutine' is not iterable
+FAILED tests/unit/test_generator.py::test_narrative_length - TypeError: PersonaGenerator._generate_narrative() takes 3 positional arguments but 4 were given
+FAILED tests/unit/test_scorer.py::test_score_computation - AttributeError: 'EnsembleScorer' object has no attribute 'score'
+FAILED tests/unit/test_scorer.py::test_rule_based_scoring - TypeError: EnsembleScorer._rule_based_scoring() takes 2 positional arguments but 3 were given
+FAILED tests/unit/test_scorer.py::test_tier_recommendation - AttributeError: 'EnsembleScorer' object has no attribute '_recommend_tier'
+FAILED tests/unit/test_scorer.py::test_score_consistency - AttributeError: 'EnsembleScorer' object has no attribute 'score'
+FAILED tests/unit/test_scorer.py::test_edge_cases - AttributeError: 'EnsembleScorer' object has no attribute 'score'
+FAILED tests/unit/test_scorer.py::test_revenue_parsing - TypeError: EnsembleScorer._rule_based_scoring() takes 2 positional arguments but 3 were given
+FAILED tests/unit/test_validator.py::test_valid_persona - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_missing_required_fields - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_score_range_validation - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_narrative_length_validation - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_short_narrative_validation - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_insights_validation - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_actions_validation - AttributeError: 'str' object has no attribute 'get'
+FAILED tests/unit/test_validator.py::test_tier_consistency - AttributeError: 'str' object has no attribute 'get'
+=================== 42 failed, 3 passed, 2 warnings in 8.62s ===================

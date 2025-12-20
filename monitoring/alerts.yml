@@ -1,0 +1,38 @@
+groups:
+  - name: marketml_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(personas_failed_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High persona generation error rate"
+          description: "Error rate is {{ $value }} errors/sec"
+
+      - alert: LowConfidenceScore
+        expr: avg_confidence_score < 0.6
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Average confidence score below threshold"
+          description: "Confidence score: {{ $value }}"
+
+      - alert: SlowGenerationLatency
+        expr: histogram_quantile(0.95, persona_generation_seconds) > 35
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "95th percentile latency above 35 seconds"
+          description: "P95 latency: {{ $value }}s"
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage: {{ $value }}MB"
