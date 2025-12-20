@@ -171,13 +171,13 @@ html, body {
     bottom: 5vh;
     width: 90vw;
     height: 90vh;
-    padding: 0;
+    padding: var(--space-xl);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     background: white;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 /* Scrollable content area for card-based content */
@@ -189,13 +189,13 @@ html, body {
     scroll-behavior: smooth;
 }
 
-/* Card component */
+/* Card component - legacy, content now in container */
 .card {
-    background: var(--bg-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    box-shadow: var(--shadow-xl);
-    margin-bottom: var(--space-lg);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    margin-bottom: 0;
     width: 100%;
 }
 
