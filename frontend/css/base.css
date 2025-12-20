@@ -204,12 +204,14 @@ html, body {
 
 .btn-back,
 .btn-home {
-    width: 10%;
+    width: 10% !important;
+    min-width: 80px;
     margin: 0;
 }
 
 .btn-next {
-    width: 10%;
+    width: 10% !important;
+    min-width: 80px;
     margin: 0;
 }
 
