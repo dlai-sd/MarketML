@@ -152,15 +152,22 @@
 
             try {
                 // Submit generation request
+                console.log('Sending request:', { name, location, description });
                 const response = await fetch(`${API_BASE}/personas/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, location, description })
                 });
 
-                if (!response.ok) throw new Error('Failed to start generation');
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error response:', errorData);
+                    throw new Error(errorData.detail || 'Failed to start generation');
+                }
 
                 const { job_id } = await response.json();
+                console.log('Job started:', job_id);
 
                 // Poll for progress
                 pollInterval = setInterval(() => checkJobStatus(job_id), 500);
