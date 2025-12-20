@@ -9,9 +9,9 @@
 /* ==================== Tablet (768px - 1023px) ==================== */
 @media (min-width: 768px) {
     
-    /* Container */
+    /* Container - centered with 5% margins */
     .container {
-        max-width: var(--container-tablet);
+        /* Inherits centering from base.css */
         padding: var(--space-lg);
     }
     
@@ -80,9 +80,9 @@
 /* ==================== Desktop (1024px - 1279px) ==================== */
 @media (min-width: 1024px) {
     
-    /* Container */
+    /* Container - centered with 5% margins */
     .container {
-        max-width: var(--container-desktop);
+        /* Inherits centering from base.css */
         padding: var(--space-xl);
     }
     
@@ -181,10 +181,8 @@
 /* ==================== Large Desktop (>= 1280px) ==================== */
 @media (min-width: 1280px) {
     
-    /* Container at max width */
-    .container {
-        max-width: var(--frame-max-width);
-    }
+    /* Container - centered with 5% margins */
+    /* Inherits positioning from base.css */
     
     /* Even more spacious */
     .card {
@@ -210,9 +208,8 @@
         padding: var(--space-2xl) 0;
     }
     
-    .container {
-        max-width: var(--frame-max-width);
-    }
+    /* Container - centered with 5% margins */
+    /* Inherits positioning from base.css */
     
     /* Larger typography */
     .header h1 {
