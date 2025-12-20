@@ -5,7 +5,6 @@ Persona generator using templates and optional LLM fallback.
 from typing import Dict, Any, Optional
 import logging
 from datetime import datetime
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +24,12 @@ class PersonaGenerator:
         """Initialize generator with optional OpenAI client."""
         self.openai_client = None
         if OPENAI_AVAILABLE:
-            api_key = os.getenv("OPENAI_API_KEY")
+            # Import settings here to get the latest config
+            from app.config import settings
+            api_key = settings.openai_api_key
             if api_key and api_key != "sk-proj-your-key-here":
                 self.openai_client = AsyncOpenAI(api_key=api_key)
-                logger.info("OpenAI client initialized")
+                logger.info(f"✅ OpenAI client initialized successfully (key: {api_key[:20]}...)")
             else:
                 logger.info("OpenAI API key not configured. Using template mode.")
     
