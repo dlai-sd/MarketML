@@ -165,8 +165,9 @@ html, body {
 /* Main canvas - 90% viewport with 5% margins on all sides */
 .container {
     position: absolute;
-    top: 5vh;
-    left: 5vw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 90vw;
     height: 90vh;
     padding: var(--space-xl);
