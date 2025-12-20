@@ -174,9 +174,10 @@ html, body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background: white;
+    background: #1a1a1a;  /* Dark/black background */
+    color: #f5f5f5;       /* Light text for readability */
     border-radius: var(--radius-lg);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 /* Scrollable content area for card-based content */
