@@ -99,8 +99,8 @@
         
         <!-- Fixed Navigation Buttons -->
         <div class="page-navigation">
-            <button class="btn btn-secondary btn-home" onclick="resetForm()" style="display:none;" id="homeBtn">🏠 Home</button>
-            <button type="submit" form="personaForm" class="btn btn-primary btn-next" id="generateBtn">Next ➡️</button>
+            <button class="btn btn-secondary btn-back" onclick="resetForm()" style="display:none;" id="backBtn">Back</button>
+            <button type="submit" form="personaForm" class="btn btn-primary btn-next" id="generateBtn">Generate</button>
         </div>
     </div><!-- End container -->
 
@@ -263,8 +263,8 @@
                 // Scroll to result
                 personaResult.scrollIntoView({ behavior: 'smooth' });
                 
-                // Show home button, hide/disable next button
-                document.getElementById('homeBtn').style.display = 'block';
+                // Show back button, hide generate button
+                document.getElementById('backBtn').style.display = 'block';
                 document.getElementById('generateBtn').style.display = 'none';
 
             } catch (error) {
@@ -285,7 +285,7 @@
             generateBtn.disabled = false;
             generateBtn.style.display = 'block';
             progressContainer.classList.remove('active');
-            document.getElementById('homeBtn').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'none';
             form.reset();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

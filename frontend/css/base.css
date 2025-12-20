@@ -205,7 +205,8 @@ html, body {
     left: 0;
     bottom: 0;
     width: 10% !important;
-    min-width: 80px;
+    min-width: 100px;
+    max-width: 150px;
     margin: 0;
 }
 
@@ -214,7 +215,8 @@ html, body {
     right: 0;
     bottom: 0;
     width: 10% !important;
-    min-width: 80px;
+    min-width: 100px;
+    max-width: 150px;
     margin: 0;
 }
 
