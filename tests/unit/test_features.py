@@ -39,12 +39,14 @@ def sample_enrichment():
             "count": 2,
             "names": ["Competitor A", "Competitor B"]
         },
-        "temporal_attributes": {
-            "revenue_estimate": "10-50 Lakhs",
-            "digital_maturity": "Basic",
-            "growth_stage": "Early",
-            "opportunity_score": 70
-        }
+        "temporal_attributes": [
+            {"attribute": "years_of_experience", "value": 5, "confidence": 0.7},
+            {"attribute": "education_level", "value": 2, "confidence": 0.8},
+            {"attribute": "skill_count", "value": 8, "confidence": 0.6},
+            {"attribute": "digital_footprint", "value": 3, "confidence": 0.7},
+            {"attribute": "professional_connections", "value": 150, "confidence": 0.5},
+            {"attribute": "content_activity", "value": 25, "confidence": 0.4}
+        ]
     }
 
 
@@ -59,9 +61,9 @@ def test_compute_features(feature_engineer, sample_entities, sample_enrichment):
     }
     features = feature_engineer.compute_features(enriched_data)
     
-    assert isinstance(features, dict)
+    assert isinstance(features, pd.DataFrame)
     # Check key features exist
-    assert "business_maturity" in features or "years_experience" in features
+    assert "years_experience" in features.columns or "business_maturity" in features.columns
 
 
 def test_business_maturity_features(feature_engineer, sample_entities):
@@ -69,8 +71,8 @@ def test_business_maturity_features(feature_engineer, sample_entities):
     enriched_data = {"entities": sample_entities}
     features = feature_engineer.compute_features(enriched_data)
     
-    # Should return a features dict
-    assert isinstance(features, dict)
+    # Should return a features DataFrame
+    assert isinstance(features, pd.DataFrame)
     assert len(features) > 0
 
 
@@ -79,7 +81,7 @@ def test_digital_presence_features(feature_engineer, sample_entities):
     enriched_data = {"entities": sample_entities}
     features = feature_engineer.compute_features(enriched_data)
     
-    assert isinstance(features, dict)
+    assert isinstance(features, pd.DataFrame)
     assert len(features) > 0
 
 
@@ -88,7 +90,7 @@ def test_location_features(feature_engineer, sample_enrichment):
     enriched_data = {"location_context": sample_enrichment["location"]}
     features = feature_engineer.compute_features(enriched_data)
     
-    assert isinstance(features, dict)
+    assert isinstance(features, pd.DataFrame)
 
 
 def test_network_features(feature_engineer, sample_entities):
@@ -96,7 +98,7 @@ def test_network_features(feature_engineer, sample_entities):
     enriched_data = {"entities": sample_entities}
     features = feature_engineer.compute_features(enriched_data)
     
-    assert isinstance(features, dict)
+    assert isinstance(features, pd.DataFrame)
     assert len(features) > 0
 
 
@@ -110,7 +112,7 @@ def test_empty_data(feature_engineer):
     }
     features = feature_engineer.compute_features(enriched_data)
     
-    assert isinstance(features, dict)
+    assert isinstance(features, pd.DataFrame)
 
 
 def test_feature_normalization(feature_engineer, sample_entities, sample_enrichment):
@@ -123,8 +125,7 @@ def test_feature_normalization(feature_engineer, sample_entities, sample_enrichm
     }
     features = feature_engineer.compute_features(enriched_data)
     
-    # Features should be a dict with numeric values
-    assert isinstance(features, dict)
-    for key, val in features.items():
-        if isinstance(val, (int, float)):
-            assert val >= 0, f"{key} has negative value"
+    # Features should be a DataFrame
+    assert isinstance(features, pd.DataFrame)
+    # Check we have numeric columns
+    assert len(features.select_dtypes(include=["number"]).columns) > 0
