@@ -13,12 +13,15 @@
 </head>
 <body>
     <div class="container">
+        <!-- Fixed Header -->
         <div class="header">
             <h1>🎯 MarketML</h1>
             <p>AI-Powered Marketing Persona Builder</p>
         </div>
 
-        <div class="card" id="inputCard">
+        <!-- Scrollable Content Area -->
+        <div class="content-area">
+            <div class="card" id="inputCard">
             <h2>Generate Business Persona</h2>
             <form id="personaForm" class="form">
                 <div class="form-group">
@@ -102,7 +105,8 @@
 
             <button class="btn btn-secondary" onclick="resetForm()">Generate Another Persona</button>
         </div>
-    </div>
+        </div><!-- End content-area -->
+    </div><!-- End container -->
 
     <script>
         // API is same origin - no CORS issues!

@@ -3,13 +3,14 @@ FastAPI application entry point.
 """
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from prometheus_client import make_asgi_app
 import logging
 import os
+from pathlib import Path
 
 from app.config import settings
 from app.api.v1 import api_router
@@ -72,6 +73,42 @@ frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "fronte
 if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
     logger.info(f"Frontend static files mounted from: {frontend_path}")
+
+# Mobile subdomain detection and routing
+@app.middleware("http")
+async def mobile_subdomain_handler(request: Request, call_next):
+    """Detect m.subdomain and mobile User-Agent, serve appropriate version."""
+    host = request.headers.get("host", "")
+    user_agent = request.headers.get("user-agent", "").lower()
+    
+    # Check if mobile subdomain or mobile User-Agent
+    is_mobile_subdomain = host.startswith("m.")
+    is_mobile_ua = any(x in user_agent for x in ["mobile", "android", "iphone", "ipad"])
+    
+    # Store in request state for use in route handlers
+    request.state.is_mobile = is_mobile_subdomain or is_mobile_ua
+    
+    response = await call_next(request)
+    return response
+
+@app.get("/frontend")
+@app.get("/frontend/")
+async def serve_frontend(request: Request):
+    """Serve appropriate frontend version based on device."""
+    is_mobile = getattr(request.state, "is_mobile", False)
+    
+    # Determine which HTML file to serve
+    if is_mobile:
+        html_file = Path(frontend_path) / "index-mobile.html"
+        if not html_file.exists():
+            html_file = Path(frontend_path) / "index.html"  # Fallback
+    else:
+        html_file = Path(frontend_path) / "index.html"
+    
+    with open(html_file, "r") as f:
+        content = f.read()
+    
+    return HTMLResponse(content=content)
 
 # Prometheus metrics endpoint
 if settings.enable_monitoring:

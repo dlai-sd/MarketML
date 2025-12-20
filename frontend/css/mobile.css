@@ -14,10 +14,13 @@
         font-size: 14px;
     }
     
-    /* Container padding */
+    /* Mobile container - full viewport with margins */
     .container {
-        padding: var(--space-sm);
-        max-width: 100%;
+        width: 90vw;
+        height: 90vh;
+        margin: 5vh 5vw;
+        padding: 0;
+    }
     }
     
     /* Header adjustments */
