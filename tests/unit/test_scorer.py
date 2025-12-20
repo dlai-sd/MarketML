@@ -12,19 +12,19 @@ def scorer():
 
 @pytest.fixture
 def sample_features():
-    return pd.DataFrame({
-        "business_maturity": [65],
-        "digital_footprint": [45],
-        "budget_indicator": [55],
-        "location_score": [75],
-        "competitive_intensity": [60],
-        "keyword_diversity": [8],
-        "org_count": [3],
-        "digital_keywords": [5],
-        "has_website_mention": [1],
-        "city_tier": [1],
-        "affluence": [75]
-    })
+    return {
+        "business_maturity": 65,
+        "digital_footprint": 45,
+        "budget_indicator": 55,
+        "location_score": 75,
+        "competitive_intensity": 60,
+        "keyword_diversity": 8,
+        "org_count": 3,
+        "digital_keywords": 5,
+        "has_website_mention": 1,
+        "city_tier": 1,
+        "affluence": 75
+    }
 
 
 @pytest.fixture
@@ -59,7 +59,9 @@ def test_score_computation(scorer, sample_features, sample_enrichment):
 
 def test_rule_based_scoring(scorer, sample_features, sample_enrichment):
     """Test rule-based scoring fallback."""
-    result = scorer._rule_based_scoring(sample_features, sample_enrichment)
+    # Convert dict to DataFrame for internal processing
+    df = pd.DataFrame([sample_features])
+    result = scorer._rule_based_scoring(df)
     
     assert isinstance(result, dict)
     assert all(key in result for key in ["maturity", "marketing_readiness", "budget_capacity"])
@@ -88,14 +90,14 @@ def test_score_consistency(scorer, sample_features, sample_enrichment):
 
 def test_edge_cases(scorer):
     """Test edge cases."""
-    # Empty features
-    empty_features = pd.DataFrame({
-        "business_maturity": [0],
-        "digital_footprint": [0],
-        "budget_indicator": [0],
-        "location_score": [0],
-        "competitive_intensity": [0]
-    })
+    # Empty/zero features
+    empty_features = {
+        "business_maturity": 0,
+        "digital_footprint": 0,
+        "budget_indicator": 0,
+        "location_score": 0,
+        "competitive_intensity": 0
+    }
     
     result = scorer.score(empty_features, {})
     
@@ -115,7 +117,9 @@ def test_revenue_parsing(scorer):
     
     for estimate in estimates:
         enrichment = {"temporal_attributes": {"revenue_estimate": estimate}}
-        features = pd.DataFrame({"business_maturity": [50]})
+        features = {"business_maturity": 50}
         
-        result = scorer._rule_based_scoring(features, enrichment)
+        # Convert to DataFrame for internal processing
+        df = pd.DataFrame([features])
+        result = scorer._rule_based_scoring(df)
         assert isinstance(result["budget_capacity"], (int, float))

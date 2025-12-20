@@ -42,7 +42,8 @@ def sample_scraped_data():
 
 def test_extract_from_linkedin(extractor, sample_scraped_data):
     """Test LinkedIn entity extraction."""
-    entities = extractor._extract_from_linkedin(sample_scraped_data["linkedin"]["data"])
+    result = extractor.extract_from_scraped_data({"linkedin": sample_scraped_data["linkedin"]})
+    entities = result["entities"]
     
     assert "persons" in entities
     assert "organizations" in entities
@@ -53,21 +54,27 @@ def test_extract_from_linkedin(extractor, sample_scraped_data):
 
 def test_extract_from_company(extractor, sample_scraped_data):
     """Test company website entity extraction."""
-    entities = extractor._extract_from_company(sample_scraped_data["company"]["data"])
+    result = extractor.extract_from_scraped_data({"company": sample_scraped_data["company"]})
+    entities = result["entities"]
     
     assert "persons" in entities
     assert "organizations" in entities
+    # Verify the source data contains expected content
     assert "Digital Marketing" in sample_scraped_data["company"]["data"]["description"]
 
 
-def test_deduplicate_entities(extractor):
+def test_deduplicate_entities(extractor):  
     """Test entity deduplication."""
-    entities = ["TechCorp", "TechCorp Solutions", "ABC Company", "ABC"]
-    deduplicated = extractor._deduplicate_entities(entities)
+    entities_dict = {
+        "organizations": ["TechCorp", "TechCorp Solutions", "ABC Company", "ABC"],
+        "persons": [],
+        "locations": []
+    }
+    deduplicated = extractor._deduplicate_entities(entities_dict)
     
     # Should keep longer versions
-    assert "TechCorp Solutions" in deduplicated
-    assert "ABC Company" in deduplicated
+    assert "TechCorp Solutions" in deduplicated["organizations"]
+    assert "ABC Company" in deduplicated["organizations"]
 
 
 def test_extract_from_all_sources(extractor, sample_scraped_data):

@@ -14,7 +14,11 @@ def valid_persona():
     return {
         "structured": {
             "name": "Yogesh Khandge",
-            "location": "Pune, Maharashtra",
+            "location": {
+                "city": "Pune",
+                "state": "Maharashtra",
+                "country": "India"
+            },
             "industry": "Technology",
             "scores": {
                 "maturity": 65,
@@ -23,8 +27,9 @@ def valid_persona():
                 "recommended_tier": 2
             }
         },
-        "narrative": "This is a comprehensive narrative about the business prospect. " * 20,
-        "short_narrative": "Growing tech business in Pune with strong digital potential.",
+        "confidence_score": 0.85,
+        "narrative": "Yogesh Khandge is a technology professional based in Pune, Maharashtra, with extensive experience in digital marketing. " * 5 + "He demonstrates strong market potential.",
+        "short_narrative": "Growing technology business in Pune with strong digital marketing potential and innovative approach.",
         "marketing_insights": [
             "Strong local market presence",
             "Growing digital footprint",

