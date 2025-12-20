@@ -105,7 +105,22 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:8000/v1';
+        // Detect API base URL - works in local dev and CodeSpaces
+        const getApiBase = () => {
+            // Check if we're in CodeSpaces (hostname contains codespaces)
+            if (window.location.hostname.includes('github.dev') || 
+                window.location.hostname.includes('codespaces') ||
+                window.location.hostname.includes('app.github.dev')) {
+                // In CodeSpaces, replace port 8080 with 8000
+                const apiUrl = window.location.origin.replace(':8080', ':8000').replace('-8080', '-8000');
+                return `${apiUrl}/v1`;
+            }
+            // Local development
+            return 'http://localhost:8000/v1';
+        };
+        
+        const API_BASE = getApiBase();
+        console.log('🔗 API Base URL:', API_BASE);
         let pollInterval;
 
         const form = document.getElementById('personaForm');
