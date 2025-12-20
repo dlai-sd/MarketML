@@ -40,27 +40,27 @@ def sample_scraped_data():
     }
 
 
-def test_extract_from_linkedin(extractor, sample_scraped_data):
+@pytest.mark.asyncio
+async def test_extract_from_linkedin(extractor, sample_scraped_data):
     """Test LinkedIn entity extraction."""
-    result = extractor.extract_from_scraped_data({"linkedin": sample_scraped_data["linkedin"]})
-    entities = result["entities"]
+    result = await extractor.extract_from_scraped_data({"linkedin": sample_scraped_data["linkedin"]})
     
-    assert "persons" in entities
-    assert "organizations" in entities
-    assert "locations" in entities
-    assert len(entities["organizations"]) > 0
-    assert "TechCorp" in str(entities["organizations"])
+    assert "persons" in result
+    assert "organizations" in result
+    assert "locations" in result
+    assert len(result["organizations"]) > 0
+    assert "TechCorp" in str(result["organizations"])
 
 
-def test_extract_from_company(extractor, sample_scraped_data):
+@pytest.mark.asyncio
+async def test_extract_from_company(extractor, sample_scraped_data):
     """Test company website entity extraction."""
-    result = extractor.extract_from_scraped_data({"company": sample_scraped_data["company"]})
-    entities = result["entities"]
+    result = await extractor.extract_from_scraped_data({"company": sample_scraped_data["company"]})
     
-    assert "persons" in entities
-    assert "organizations" in entities
+    assert "persons" in result
+    assert "organizations" in result
     # Verify the source data contains expected content
-    assert "Digital Marketing" in sample_scraped_data["company"]["data"]["description"]
+    assert "digital marketing" in sample_scraped_data["company"]["data"]["description"].lower()
 
 
 def test_deduplicate_entities(extractor):  
@@ -68,7 +68,14 @@ def test_deduplicate_entities(extractor):
     entities_dict = {
         "organizations": ["TechCorp", "TechCorp Solutions", "ABC Company", "ABC"],
         "persons": [],
-        "locations": []
+        "locations": [],
+        "titles": [],
+        "skills": [],
+        "dates": [],
+        "contact": {"emails": [], "phones": []},
+        "social_profiles": {},
+        "experience": [],
+        "education": []
     }
     deduplicated = extractor._deduplicate_entities(entities_dict)
     
@@ -77,36 +84,38 @@ def test_deduplicate_entities(extractor):
     assert "ABC Company" in deduplicated["organizations"]
 
 
-def test_extract_from_all_sources(extractor, sample_scraped_data):
+@pytest.mark.asyncio
+async def test_extract_from_all_sources(extractor, sample_scraped_data):
     """Test extraction from all sources."""
-    result = extractor.extract_from_scraped_data(sample_scraped_data)
+    result = await extractor.extract_from_scraped_data(sample_scraped_data)
     
-    assert "entities" in result
-    assert "persons" in result["entities"]
-    assert "organizations" in result["entities"]
-    assert "locations" in result["entities"]
-    assert "keywords" in result
-    assert len(result["keywords"]) > 0
+    assert "persons" in result
+    assert "organizations" in result
+    assert "locations" in result
+    assert "skills" in result
+    assert len(result["skills"]) > 0
 
 
-def test_empty_scraped_data(extractor):
+@pytest.mark.asyncio
+async def test_empty_scraped_data(extractor):
     """Test handling of empty scraped data."""
-    result = extractor.extract_from_scraped_data({})
+    result = await extractor.extract_from_scraped_data({})
     
-    assert result["entities"]["persons"] == []
-    assert result["entities"]["organizations"] == []
-    assert result["entities"]["locations"] == []
+    assert result["persons"] == []
+    assert result["organizations"] == []
+    assert result["locations"] == []
 
 
-def test_failed_scraping(extractor):
+@pytest.mark.asyncio
+async def test_failed_scraping(extractor):
     """Test handling of failed scraping results."""
     failed_data = {
         "linkedin": {"success": False, "error": "Rate limited"},
         "company": {"success": False, "error": "Site down"}
     }
     
-    result = extractor.extract_from_scraped_data(failed_data)
+    result = await extractor.extract_from_scraped_data(failed_data)
     
     # Should still return structure
-    assert "entities" in result
-    assert "keywords" in result
+    assert "persons" in result
+    assert "organizations" in result

@@ -23,7 +23,7 @@ def valid_persona():
             "scores": {
                 "maturity": 65,
                 "marketing_readiness": 55,
-                "budget_capacity": 45,
+                "budget_capacity": 55,
                 "recommended_tier": 2
             }
         },

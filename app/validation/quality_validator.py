@@ -75,6 +75,20 @@ class QualityValidator:
             if not structured.get("scores"):
                 issues.append("Missing scores in structured data")
         
+        # Check marketing insights
+        insights = persona_data.get("marketing_insights", [])
+        if not isinstance(insights, list):
+            issues.append("marketing_insights must be a list")
+        elif len(insights) < 3:
+            issues.append(f"Insufficient marketing insights ({len(insights)}, minimum 3)")
+        
+        # Check recommended actions
+        actions = persona_data.get("recommended_actions", [])
+        if not isinstance(actions, list):
+            issues.append("recommended_actions must be a list")
+        elif len(actions) < 3:
+            issues.append(f"Insufficient recommended actions ({len(actions)}, minimum 3)")
+        
         return issues
     
     def _check_consistency(self, persona_data: Dict) -> List[str]:
@@ -104,6 +118,31 @@ class QualityValidator:
             else:
                 if not (0 <= score_value <= 100):
                     issues.append(f"Score {score_name} out of range: {score_value}")
+        
+        # Check tier consistency with scores
+        if "scores" in structured:
+            scores = structured["scores"]
+            tier = scores.get("recommended_tier")
+            if tier is not None:
+                budget = scores.get("budget_capacity", 0)
+                readiness = scores.get("marketing_readiness", 0)
+                
+                # Calculate expected tier based on actual logic from scorer
+                # Tier 3 = Scale pack (budget >= 75 and readiness >= 70)
+                # Tier 2 = Growth pack (budget >= 50 and readiness >= 50)
+                # Tier 1 = Launch pack (budget >= 30)
+                # Tier 0 = Not ready (budget < 30)
+                if budget >= 75 and readiness >= 70:
+                    expected_tier = 3
+                elif budget >= 50 and readiness >= 50:
+                    expected_tier = 2
+                elif budget >= 30:
+                    expected_tier = 1
+                else:
+                    expected_tier = 0
+                
+                if tier != expected_tier:
+                    issues.append(f"Tier {tier} inconsistent with scores (budget={budget}, readiness={readiness}, expected tier {expected_tier})")
         
         return issues
     
