@@ -91,7 +91,7 @@ class PersonaGenerator:
     
     async def _generate_narrative_gpt(self, structured: Dict, enriched_data: Dict, mode: str) -> str:
         """Generate full persona narrative using GPT."""
-        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4o"
         
         prompt = f"""Generate a professional 200-300 word business persona narrative for:
 
@@ -132,7 +132,7 @@ Keep it professional, data-driven, and actionable for B2B marketing."""
     
     async def _generate_short_narrative_gpt(self, structured: Dict, mode: str) -> str:
         """Generate 15-word summary using GPT."""
-        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4o"
         
         prompt = f"""Create a 15-word professional summary for:
 {structured['name']} - {structured.get('title', 'Professional')} in {structured['location']['city']}
@@ -154,7 +154,7 @@ Format: [title] in [city], [stage] business with [key strength]"""
     
     async def _generate_insights_gpt(self, structured: Dict, enriched_data: Dict, scores: Dict, mode: str) -> list:
         """Generate marketing insights using GPT."""
-        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4o"
         
         prompt = f"""Generate 3-5 marketing insights for this business profile:
 
@@ -190,7 +190,7 @@ Return as a Python list format."""
     
     async def _generate_recommendations_gpt(self, scores: Dict, mode: str) -> list:
         """Generate recommendations using GPT."""
-        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4o"
         
         tier = scores['recommended_tier']
         pricing = {
