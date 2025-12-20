@@ -186,7 +186,31 @@ html, body {
     overflow-y: auto;
     overflow-x: hidden;
     padding: var(--space-md);
+    padding-bottom: calc(var(--space-md) + 60px); /* Space for fixed navigation */
     scroll-behavior: smooth;
+}
+
+/* Fixed navigation buttons at bottom */
+.page-navigation {
+    position: absolute;
+    bottom: var(--space-lg);
+    left: var(--space-xl);
+    right: var(--space-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    z-index: var(--z-fixed);
+}
+
+.btn-back,
+.btn-home {
+    margin: 0;
+}
+
+.btn-next {
+    margin: 0;
+    margin-left: auto; /* Push to right */
 }
 
 /* Card component - legacy, content now in container */

@@ -29,7 +29,6 @@
                     <label for="description" class="form-label">Description (Optional)</label>
                     <textarea id="description" class="form-control" rows="3" placeholder="Additional context about the business..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary" id="generateBtn">Generate Persona</button>
             </form>
 
             <div class="progress-container" id="progressContainer">
@@ -94,10 +93,14 @@
                 </h3>
                 <ul class="actions-list" id="actionsList"></ul>
             </div>
-
-            <button class="btn btn-secondary" onclick="resetForm()">Generate Another Persona</button>
         </div>
         </div><!-- End content-area -->
+        
+        <!-- Fixed Navigation Buttons -->
+        <div class="page-navigation">
+            <button class="btn btn-secondary btn-home" onclick="resetForm()" style="display:none;" id="homeBtn">🏠 Home</button>
+            <button type="submit" form="personaForm" class="btn btn-primary btn-next" id="generateBtn">Next ➡️</button>
+        </div>
     </div><!-- End container -->
 
     <script>
@@ -258,6 +261,10 @@
 
                 // Scroll to result
                 personaResult.scrollIntoView({ behavior: 'smooth' });
+                
+                // Show home button, hide/disable next button
+                document.getElementById('homeBtn').style.display = 'block';
+                document.getElementById('generateBtn').style.display = 'none';
 
             } catch (error) {
                 showError(error.message);
@@ -275,7 +282,9 @@
             inputCard.style.display = 'block';
             personaResult.classList.remove('active');
             generateBtn.disabled = false;
+            generateBtn.style.display = 'block';
             progressContainer.classList.remove('active');
+            document.getElementById('homeBtn').style.display = 'none';
             form.reset();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
