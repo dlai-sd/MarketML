@@ -196,20 +196,23 @@ html, body {
     bottom: var(--space-lg);
     left: var(--space-xl);
     right: var(--space-xl);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     z-index: var(--z-fixed);
 }
 
 .btn-back,
 .btn-home {
+    position: absolute;
+    left: 0;
+    bottom: 0;
     width: 10% !important;
     min-width: 80px;
     margin: 0;
 }
 
 .btn-next {
+    position: absolute;
+    right: 0;
+    bottom: 0;
     width: 10% !important;
     min-width: 80px;
     margin: 0;
