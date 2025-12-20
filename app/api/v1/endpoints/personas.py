@@ -47,7 +47,10 @@ async def generate_persona(
         name=request.name,
         location=request.location,
         description=request.description,
-        confirmed_profiles=request.confirmed_profiles
+        confirmed_profiles=request.confirmed_profiles,
+        generation_mode=request.generation_mode,
+        data_source=request.data_source,
+        linkedin_mode=request.linkedin_mode
     )
     
     logger.info(f"Queued persona generation for {request.name}, job_id={job_id}")

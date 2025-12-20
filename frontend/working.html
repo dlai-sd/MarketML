@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketML - Persona Builder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 { color: #1f2937; margin-bottom: 8px; font-size: 28px; }
+        .subtitle { color: #6b7280; margin-bottom: 32px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; color: #374151; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #667eea; }
+        textarea { resize: vertical; min-height: 80px; }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .progress {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .progress.show { display: block; }
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .status { color: #6b7280; font-size: 14px; text-align: center; }
+        .result {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+        }
+        .result.show { display: block; }
+        .result h2 { color: #065f46; margin-bottom: 16px; font-size: 20px; }
+        .result-data {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .error {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            color: #991b1b;
+        }
+        .error.show { display: block; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <span class="badge">🎯 AI-Powered</span>
+        <h1>MarketML Persona Builder</h1>
+        <p class="subtitle">Generate comprehensive business personas in seconds</p>
+
+        <div class="form-group">
+            <label for="name">Name / Business Name *</label>
+            <input type="text" id="name" placeholder="e.g., Yogesh Khandge">
+        </div>
+        
+        <div class="form-group">
+            <label for="location">Location *</label>
+            <input type="text" id="location" placeholder="e.g., Pune, Maharashtra">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Additional Context (Optional)</label>
+            <textarea id="description" placeholder="Any additional information..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="generationMode">🤖 Generation Mode</label>
+            <select id="generationMode" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+                <option value="template">Template (Free, Fast)</option>
+                <option value="gpt-3.5">GPT-3.5-Turbo (₹0.20/persona, Smart)</option>
+                <option value="gpt-4">GPT-4 (₹6/persona, Best Quality)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="dataSource">🌐 Data Source</label>
+            <select id="dataSource" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+                <option value="mock">Mock Data (Demo, Instant)</option>
+                <option value="google">Google Search (Free, 2-3 sec)</option>
+                <option value="playwright">Playwright Scraping (Free, 5-10 sec)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="linkedinMode">💼 LinkedIn Data</label>
+            <select id="linkedinMode" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+                <option value="skip">Skip (Fastest)</option>
+                <option value="basic">Basic Search (Free)</option>
+                <option value="proxycurl">Proxycurl API (₹200/profile)</option>
+            </select>
+        </div>
+
+        <button onclick="generatePersona()" id="btn">Generate Persona</button>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="status" id="status">Initializing...</div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <h2>✅ Persona Generated!</h2>
+            <div class="result-data" id="resultData"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/v1';
+        let timer = null;
+
+        async function generatePersona() {
+            const btn = document.getElementById('btn');
+            const prog = document.getElementById('progress');
+            const fill = document.getElementById('progressFill');
+            const stat = document.getElementById('status');
+            const err = document.getElementById('error');
+            const res = document.getElementById('result');
+            
+            const name = document.getElementById('name').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const generationMode = document.getElementById('generationMode').value;
+            const dataSource = document.getElementById('dataSource').value;
+            const linkedinMode = document.getElementById('linkedinMode').value;
+
+            console.log('▶️ Generate clicked');
+            console.log('Input:', { name, location, description, generationMode, dataSource, linkedinMode });
+
+            if (!name || !location) {
+                err.textContent = 'Please fill Name and Location';
+                err.className = 'error show';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            prog.className = 'progress show';
+            err.className = 'error';
+            res.className = 'result';
+            fill.style.width = '0%';
+            stat.textContent = 'Starting...';
+
+            try {
+                console.log('→ POST', API + '/personas/generate');
+                const resp = await fetch(API + '/personas/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name, 
+                        location, 
+                        description,
+                        generation_mode: generationMode,
+                        data_source: dataSource,
+                        linkedin_mode: linkedinMode
+                    })
+                });
+
+                console.log('← Status:', resp.status);
+                
+                if (!resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Request failed');
+                }
+
+                const data = await resp.json();
+                console.log('✓ Job ID:', data.job_id);
+                
+                timer = setInterval(() => checkJob(data.job_id), 500);
+
+            } catch (e) {
+                console.error('✗ Error:', e);
+                err.textContent = '❌ ' + e.message;
+                err.className = 'error show';
+                btn.disabled = false;
+                btn.textContent = 'Try Again';
+                prog.className = 'progress';
+            }
+        }
+
+        async function checkJob(jobId) {
+            const fill = document.getElementById('progressFill');
+            const stat = document.getElementById('status');
+            
+            try {
+                const resp = await fetch(API + '/jobs/' + jobId);
+                const job = await resp.json();
+                
+                console.log('Status:', job.status, job.progress + '%');
+                
+                fill.style.width = job.progress + '%';
+                stat.textContent = job.current_step;
+
+                if (job.status === 'completed') {
+                    clearInterval(timer);
+                    console.log('✓ Completed! Persona:', job.persona_id);
+                    await showPersona(job.persona_id);
+                } else if (job.status === 'failed') {
+                    clearInterval(timer);
+                    throw new Error(job.error_message || 'Failed');
+                }
+            } catch (e) {
+                clearInterval(timer);
+                const err = document.getElementById('error');
+                const btn = document.getElementById('btn');
+                err.textContent = '❌ ' + e.message;
+                err.className = 'error show';
+                btn.disabled = false;
+                btn.textContent = 'Try Again';
+            }
+        }
+
+        async function showPersona(id) {
+            const prog = document.getElementById('progress');
+            const res = document.getElementById('result');
+            const data = document.getElementById('resultData');
+            const btn = document.getElementById('btn');
+            
+            try {
+                console.log('→ GET persona', id);
+                const resp = await fetch(API + '/personas/' + id);
+                const p = await resp.json();
+                
+                console.log('✓ Got persona');
+                
+                prog.className = 'progress';
+                res.className = 'result show';
+                
+                const s = p.structured || {};
+                const loc = s.location || {};
+                const scores = s.scores || {};
+                
+                data.innerHTML = `
+                    <p><strong>Name:</strong> ${s.name || 'N/A'}</p>
+                    <p><strong>Location:</strong> ${loc.city || 'N/A'}, ${loc.state || 'N/A'}</p>
+                    <p><strong>Confidence:</strong> ${(p.confidence_score * 100).toFixed(1)}%</p>
+                    <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e5e7eb;">
+                    <p><strong>Maturity:</strong> ${scores.maturity?.toFixed(1) || 0}/100</p>
+                    <p><strong>Marketing Readiness:</strong> ${scores.marketing_readiness?.toFixed(1) || 0}/100</p>
+                    <p><strong>Budget Capacity:</strong> ${scores.budget_capacity?.toFixed(1) || 0}/100</p>
+                    <p><strong>Tier:</strong> ${scores.recommended_tier || 'N/A'}</p>
+                    <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e5e7eb;">
+                    <p><strong>Narrative:</strong></p>
+                    <p style="color: #6b7280;">${p.narrative || 'N/A'}</p>
+                `;
+
+                btn.disabled = false;
+                btn.textContent = 'Generate Another';
+                console.log('✓ Display complete');
+
+            } catch (e) {
+                console.error('✗ Display error:', e);
+                const err = document.getElementById('error');
+                err.textContent = '❌ ' + e.message;
+                err.className = 'error show';
+                btn.disabled = false;
+                btn.textContent = 'Try Again';
+            }
+        }
+    </script>
+</body>
+</html>

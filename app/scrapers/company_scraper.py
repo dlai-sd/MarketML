@@ -19,6 +19,8 @@ class CompanyScraper(BaseScraper):
         name: str,
         location: str,
         profile_url: Optional[str] = None,
+        data_source: str = "mock",
+        linkedin_mode: str = "skip",
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -28,14 +30,21 @@ class CompanyScraper(BaseScraper):
             name: Company/person name
             location: Location
             profile_url: Direct website URL if available
+            data_source: "mock", "google", or "playwright"
         
         Returns:
             Dictionary with website data
         """
-        logger.info(f"Scraping company website for {name}")
+        logger.info(f"Scraping company website for {name} (source: {data_source})")
         
         # Try to find company website
-        website_url = profile_url or await self._find_company_website(name, location)
+        if data_source == "google":
+            website_url = profile_url or await self._find_company_website_google(name, location)
+        elif data_source == "playwright":
+            website_url = profile_url or await self._find_company_website_playwright(name, location)
+        else:
+            # Mock mode - no website discovery
+            website_url = profile_url
         
         if not website_url:
             return {
@@ -96,12 +105,68 @@ class CompanyScraper(BaseScraper):
             "success": True
         }
     
+    async def _find_company_website_google(self, name: str, location: str) -> Optional[str]:
+        """Find company website using Google search."""
+        try:
+            from googlesearch import search
+            
+            # Search query
+            query = f"{name} {location} website"
+            logger.info(f"Searching Google for: {query}")
+            
+            # Get first result
+            results = search(query, num_results=5, lang="en")
+            for url in results:
+                # Filter out social media and directory sites
+                if not any(x in url.lower() for x in ['linkedin', 'facebook', 'twitter', 'instagram', 'justdial']):
+                    logger.info(f"Found company website: {url}")
+                    return url
+            
+            logger.warning(f"No suitable website found for {name}")
+            return None
+            
+        except ImportError:
+            logger.error("googlesearch-python not installed")
+            return None
+        except Exception as e:
+            logger.error(f"Google search failed: {e}")
+            return None
+    
+    async def _find_company_website_playwright(self, name: str, location: str) -> Optional[str]:
+        """Find company website using Playwright (Google search with JS rendering)."""
+        try:
+            from playwright.async_api import async_playwright
+            
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+                
+                # Search on Google
+                query = f"{name} {location} website"
+                search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+                
+                await page.goto(search_url)
+                await page.wait_for_timeout(2000)
+                
+                # Extract first few search results
+                links = await page.query_selector_all("a")
+                for link in links[:10]:
+                    href = await link.get_attribute("href")
+                    if href and href.startswith("http") and not any(x in href for x in ['google.com', 'linkedin', 'facebook']):
+                        await browser.close()
+                        logger.info(f"Found company website via Playwright: {href}")
+                        return href
+                
+                await browser.close()
+                return None
+                
+        except Exception as e:
+            logger.error(f"Playwright website discovery failed: {e}")
+            return None
+    
     async def _find_company_website(self, name: str, location: str) -> Optional[str]:
-        """Try to find company website using Google search."""
-        # TODO: Implement Google search to find website
-        # For now, return None
-        logger.warning(f"Website discovery not implemented for {name}")
-        return None
+        """Try to find company website using Google search (deprecated - use _find_company_website_google)."""
+        return await self._find_company_website_google(name, location)
     
     def _extract_emails(self, soup) -> list:
         """Extract email addresses from page."""

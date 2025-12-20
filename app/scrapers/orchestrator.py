@@ -37,7 +37,9 @@ class ScraperOrchestrator:
         location: str,
         confirmed_profiles: Optional[List[Dict]] = None,
         person_id: Optional[str] = None,
-        db: Optional[AsyncSession] = None
+        db: Optional[AsyncSession] = None,
+        data_source: str = "mock",
+        linkedin_mode: str = "skip"
     ) -> Dict[str, Dict[str, Any]]:
         """
         Scrape all available sources in parallel.
@@ -48,17 +50,27 @@ class ScraperOrchestrator:
             confirmed_profiles: List of confirmed profile URLs
             person_id: Person ID for tracking
             db: Database session for storing results
+            data_source: "mock", "google", or "playwright"
+            linkedin_mode: "skip", "basic", or "proxycurl"
         
         Returns:
             Dictionary of scraped data by source
         """
-        logger.info(f"Starting parallel scraping for {name}")
+        logger.info(f"Starting parallel scraping for {name} (source: {data_source}, linkedin: {linkedin_mode})")
+        
+        # If using mock data, return immediately
+        if data_source == "mock" and linkedin_mode == "skip":
+            return await self._get_mock_data(name, location, person_id, db)
         
         # Create scraping tasks
         tasks = []
         source_names = []
         
         for source_name, scraper in self.scrapers.items():
+            # Skip LinkedIn if mode is skip
+            if source_name == "linkedin" and linkedin_mode == "skip":
+                continue
+            
             # Check if we have a confirmed profile for this source
             profile_url = None
             if confirmed_profiles:
@@ -74,7 +86,9 @@ class ScraperOrchestrator:
                 location=location,
                 profile_url=profile_url,
                 person_id=person_id,
-                db=db
+                db=db,
+                data_source=data_source,
+                linkedin_mode=linkedin_mode
             )
             tasks.append(task)
             source_names.append(source_name)
@@ -96,6 +110,24 @@ class ScraperOrchestrator:
         
         return scraped_data
     
+    async def _get_mock_data(
+        self,
+        name: str,
+        location: str,
+        person_id: Optional[str],
+        db: Optional[AsyncSession]
+    ) -> Dict[str, Dict[str, Any]]:
+        """Return mock data for all sources."""
+        logger.info(f"Using mock data for {name}")
+        
+        mock_data = {}
+        for source_name, scraper in self.scrapers.items():
+            # Use existing scraper mock methods
+            data = await scraper.scrape(name=name, location=location, profile_url=None)
+            mock_data[source_name] = data
+        
+        return mock_data
+    
     async def _scrape_with_error_handling(
         self,
         scraper: BaseScraper,
@@ -104,17 +136,21 @@ class ScraperOrchestrator:
         location: str,
         profile_url: Optional[str],
         person_id: Optional[str],
-        db: Optional[AsyncSession]
+        db: Optional[AsyncSession],
+        data_source: str = "mock",
+        linkedin_mode: str = "skip"
     ) -> Dict[str, Any]:
         """Scrape a single source with error handling."""
         start_time = datetime.utcnow()
         
         try:
-            # Scrape data
+            # Pass mode parameters to scraper
             data = await scraper.scrape(
                 name=name,
                 location=location,
-                profile_url=profile_url
+                profile_url=profile_url,
+                data_source=data_source,
+                linkedin_mode=linkedin_mode
             )
             
             # Calculate duration

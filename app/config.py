@@ -110,6 +110,12 @@ class Settings(BaseSettings):
         alias="DEEPSEEK_BASE_URL"
     )
     
+    # OpenAI API
+    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
+    
+    # Proxycurl API (for LinkedIn scraping)
+    proxycurl_api_key: Optional[str] = Field(default=None, alias="PROXYCURL_API_KEY")
+    
     # Feature Flags
     enable_llm_fallback: bool = Field(default=True, alias="ENABLE_LLM_FALLBACK")
     enable_caching: bool = Field(default=True, alias="ENABLE_CACHING")

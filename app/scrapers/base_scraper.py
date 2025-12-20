@@ -86,10 +86,25 @@ class BaseScraper(ABC):
             return None
     
     @abstractmethod
-    async def scrape(self, **kwargs) -> Dict[str, Any]:
+    async def scrape(
+        self,
+        name: str,
+        location: str,
+        profile_url: Optional[str] = None,
+        data_source: str = "mock",
+        linkedin_mode: str = "skip",
+        **kwargs
+    ) -> Dict[str, Any]:
         """
         Scrape data from source.
         Must be implemented by subclasses.
+        
+        Args:
+            name: Person/business name
+            location: Location
+            profile_url: Optional profile URL
+            data_source: "mock", "google", or "playwright"
+            linkedin_mode: "skip", "basic", or "proxycurl"
         
         Returns:
             Dictionary with scraped data

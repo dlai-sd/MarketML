@@ -18,6 +18,8 @@ class NewsScraper(BaseScraper):
         name: str,
         location: str,
         profile_url: Optional[str] = None,
+        data_source: str = "mock",
+        linkedin_mode: str = "skip",
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -27,11 +29,12 @@ class NewsScraper(BaseScraper):
             name: Person/company name
             location: Location
             profile_url: Not used for news scraping
+            data_source: "mock", "google", or "playwright"
         
         Returns:
             Dictionary with news articles
         """
-        logger.info(f"Searching news for {name}")
+        logger.info(f"Searching news for {name} (source: {data_source})")
         
         # TODO: Implement news search
         # Options:

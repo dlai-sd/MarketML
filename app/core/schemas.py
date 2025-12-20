@@ -18,12 +18,20 @@ class PersonaGenerationRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=1000)
     confirmed_profiles: Optional[List[Dict[str, str]]] = None
     
+    # Generation options
+    generation_mode: Optional[str] = Field(default="template", pattern="^(template|gpt-3.5|gpt-4)$")
+    data_source: Optional[str] = Field(default="mock", pattern="^(mock|google|playwright)$")
+    linkedin_mode: Optional[str] = Field(default="skip", pattern="^(skip|basic|proxycurl)$")
+    
     class Config:
         json_schema_extra = {
             "example": {
                 "name": "Yogesh Khandge",
                 "location": "Pune, Maharashtra",
                 "description": "Entrepreneur in furniture business",
+                "generation_mode": "gpt-3.5",
+                "data_source": "google",
+                "linkedin_mode": "basic",
                 "confirmed_profiles": [
                     {"source": "linkedin", "url": "https://linkedin.com/in/..."}
                 ]

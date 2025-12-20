@@ -30,11 +30,19 @@ def generate_persona_task(
     name: str,
     location: str,
     description: Optional[str] = None,
-    confirmed_profiles: Optional[List[Dict]] = None
+    confirmed_profiles: Optional[List[Dict]] = None,
+    generation_mode: str = "template",
+    data_source: str = "mock",
+    linkedin_mode: str = "skip"
 ):
     """
     Celery task to generate persona asynchronously.
     This runs the entire pipeline: scrape → extract → enrich → score → generate → validate
+    
+    Args:
+        generation_mode: "template", "gpt-3.5", or "gpt-4"
+        data_source: "mock", "google", or "playwright"
+        linkedin_mode: "skip", "basic", or "proxycurl"
     """
     start_time = time.time()
     
@@ -47,12 +55,13 @@ def generate_persona_task(
         
         result = loop.run_until_complete(
             _generate_persona_async(
-                self, job_id, person_id, name, location, description, confirmed_profiles
+                self, job_id, person_id, name, location, description, confirmed_profiles,
+                generation_mode, data_source, linkedin_mode
             )
         )
         
         generation_time = int((time.time() - start_time) * 1000)
-        logger.info(f"Persona generated successfully for {name} in {generation_time}ms")
+        logger.info(f"Persona generated successfully for {name} in {generation_time}ms (mode: {generation_mode}, source: {data_source})")
         
         return result
         
@@ -75,24 +84,29 @@ async def _generate_persona_async(
     name: str,
     location: str,
     description: Optional[str],
-    confirmed_profiles: Optional[List[Dict]]
+    confirmed_profiles: Optional[List[Dict]],
+    generation_mode: str = "template",
+    data_source: str = "mock",
+    linkedin_mode: str = "skip"
 ):
     """Async persona generation pipeline."""
     
     async with AsyncSessionLocal() as db:
         try:
             # Step 1: Update job status - Starting
-            await _update_job_status(job_id, "processing", 5, "Initializing scrapers...")
+            await _update_job_status(job_id, "processing", 5, f"Initializing (Mode: {generation_mode}, Source: {data_source})...")
             
             # Step 2: Scrape data from multiple sources
-            await _update_job_status(job_id, "processing", 10, "Scraping LinkedIn...")
+            await _update_job_status(job_id, "processing", 10, "Scraping data...")
             orchestrator = ScraperOrchestrator()
             scraped_data = await orchestrator.scrape_all_sources(
                 name=name,
                 location=location,
                 confirmed_profiles=confirmed_profiles,
                 person_id=person_id,
-                db=db
+                db=db,
+                data_source=data_source,
+                linkedin_mode=linkedin_mode
             )
             
             # Step 3: Extract entities
@@ -116,12 +130,13 @@ async def _generate_persona_async(
             scores = scorer.predict(features)
             
             # Step 7: Generate persona narrative
-            await _update_job_status(job_id, "processing", 85, "Generating persona...")
+            await _update_job_status(job_id, "processing", 85, f"Generating persona with {generation_mode}...")
             generator = PersonaGenerator()
             persona_data = await generator.generate(
                 enriched_data=enriched_data,
                 scores=scores,
-                name=name
+                name=name,
+                generation_mode=generation_mode
             )
             
             # Step 8: Validate quality

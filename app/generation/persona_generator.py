@@ -2,21 +2,42 @@
 Persona generator using templates and optional LLM fallback.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import logging
 from datetime import datetime
+import os
 
 logger = logging.getLogger(__name__)
+
+# Try to import OpenAI, but don't fail if not available
+try:
+    from openai import AsyncOpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    logger.warning("OpenAI not installed. Only template mode will be available.")
 
 
 class PersonaGenerator:
     """Generate persona narratives from enriched data and scores."""
     
+    def __init__(self):
+        """Initialize generator with optional OpenAI client."""
+        self.openai_client = None
+        if OPENAI_AVAILABLE:
+            api_key = os.getenv("OPENAI_API_KEY")
+            if api_key and api_key != "sk-proj-your-key-here":
+                self.openai_client = AsyncOpenAI(api_key=api_key)
+                logger.info("OpenAI client initialized")
+            else:
+                logger.info("OpenAI API key not configured. Using template mode.")
+    
     async def generate(
         self,
         enriched_data: Dict[str, Any],
         scores: Dict[str, float],
-        name: str
+        name: str,
+        generation_mode: str = "template"
     ) -> Dict[str, Any]:
         """
         Generate complete persona with structured data and narrative.
@@ -25,11 +46,12 @@ class PersonaGenerator:
             enriched_data: Enriched data from pipeline
             scores: ML model scores
             name: Person/business name
+            generation_mode: "template", "gpt-3.5", or "gpt-4"
         
         Returns:
             Complete persona dictionary
         """
-        logger.info(f"Generating persona for {name}")
+        logger.info(f"Generating persona for {name} using {generation_mode} mode")
         
         entities = enriched_data.get("entities", {})
         location_context = enriched_data.get("location_context", {})
@@ -39,13 +61,19 @@ class PersonaGenerator:
             name, entities, location_context, scores
         )
         
-        # Generate narratives
-        narrative = self._generate_narrative(structured, enriched_data)
-        short_narrative = self._generate_short_narrative(structured)
-        
-        # Generate insights and recommendations
-        insights = self._generate_insights(structured, enriched_data, scores)
-        recommendations = self._generate_recommendations(scores)
+        # Generate narratives based on mode
+        if generation_mode in ["gpt-3.5", "gpt-4"] and self.openai_client:
+            narrative = await self._generate_narrative_gpt(structured, enriched_data, generation_mode)
+            short_narrative = await self._generate_short_narrative_gpt(structured, generation_mode)
+            insights = await self._generate_insights_gpt(structured, enriched_data, scores, generation_mode)
+            recommendations = await self._generate_recommendations_gpt(scores, generation_mode)
+        else:
+            if generation_mode != "template":
+                logger.warning(f"Requested {generation_mode} but OpenAI not available. Falling back to template mode.")
+            narrative = self._generate_narrative(structured, enriched_data)
+            short_narrative = self._generate_short_narrative(structured)
+            insights = self._generate_insights(structured, enriched_data, scores)
+            recommendations = self._generate_recommendations(scores)
         
         # Calculate confidence
         confidence = self._calculate_confidence(enriched_data, scores)
@@ -56,8 +84,147 @@ class PersonaGenerator:
             "short_narrative": short_narrative,
             "marketing_insights": insights,
             "recommended_actions": recommendations,
-            "confidence_score": confidence
+            "confidence_score": confidence,
+            "generation_mode_used": generation_mode if generation_mode == "template" or self.openai_client else "template"
         }
+    
+    async def _generate_narrative_gpt(self, structured: Dict, enriched_data: Dict, mode: str) -> str:
+        """Generate full persona narrative using GPT."""
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        
+        prompt = f"""Generate a professional 200-300 word business persona narrative for:
+
+Name: {structured['name']}
+Title: {structured.get('title', 'Professional')}
+Company: {structured.get('company', 'N/A')}
+Location: {structured['location']['city']}, {structured['location']['state']}
+Industry Context: {structured['location'].get('market_context', 'Emerging market')}
+
+Business Scores:
+- Maturity: {structured['scores']['maturity']:.0f}/100
+- Marketing Readiness: {structured['scores']['marketing_readiness']:.0f}/100
+- Budget Capacity: {structured['scores']['budget_capacity']:.0f}/100
+- Recommended Tier: {structured['scores']['recommended_tier']}
+
+Write a compelling narrative covering:
+1. Professional background and current role
+2. Location market dynamics and opportunities
+3. Digital presence and readiness
+4. Marketing potential and recommended strategy
+
+Keep it professional, data-driven, and actionable for B2B marketing."""
+
+        try:
+            response = await self.openai_client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are an expert B2B marketing analyst creating business personas."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"GPT narrative generation failed: {e}. Falling back to template.")
+            return self._generate_narrative(structured, enriched_data)
+    
+    async def _generate_short_narrative_gpt(self, structured: Dict, mode: str) -> str:
+        """Generate 15-word summary using GPT."""
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        
+        prompt = f"""Create a 15-word professional summary for:
+{structured['name']} - {structured.get('title', 'Professional')} in {structured['location']['city']}
+Tier {structured['scores']['recommended_tier']} marketing potential.
+
+Format: [title] in [city], [stage] business with [key strength]"""
+
+        try:
+            response = await self.openai_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=50,
+                temperature=0.5
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"GPT short narrative failed: {e}. Falling back to template.")
+            return self._generate_short_narrative(structured)
+    
+    async def _generate_insights_gpt(self, structured: Dict, enriched_data: Dict, scores: Dict, mode: str) -> list:
+        """Generate marketing insights using GPT."""
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        
+        prompt = f"""Generate 3-5 marketing insights for this business profile:
+
+Location: {structured['location']['city']}, {structured['location']['state']}
+Affluence Score: {structured['location'].get('affluence_score', 5)}/10
+Maturity: {scores['maturity']:.0f}/100
+Marketing Readiness: {scores['marketing_readiness']:.0f}/100
+Budget: {scores['budget_capacity']:.0f}/100
+
+Provide concise, actionable insights (one line each) about:
+- Market opportunity in their location
+- Digital readiness assessment
+- Budget and tier recommendations
+- Growth potential
+- Competitive positioning
+
+Return as a Python list format."""
+
+        try:
+            response = await self.openai_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=200,
+                temperature=0.6
+            )
+            content = response.choices[0].message.content.strip()
+            # Parse list from response
+            insights = [line.strip('- ').strip() for line in content.split('\n') if line.strip()]
+            return insights[:5]
+        except Exception as e:
+            logger.error(f"GPT insights generation failed: {e}. Falling back to template.")
+            return self._generate_insights(structured, enriched_data, scores)
+    
+    async def _generate_recommendations_gpt(self, scores: Dict, mode: str) -> list:
+        """Generate recommendations using GPT."""
+        model = "gpt-3.5-turbo" if mode == "gpt-3.5" else "gpt-4"
+        
+        tier = scores['recommended_tier']
+        pricing = {
+            3: "₹34,999/mo Scale Pack",
+            2: "₹14,999/mo Growth Pack",
+            1: "₹4,999/mo Launch Pack",
+            0: "Consultation package"
+        }
+        
+        prompt = f"""Generate 3-5 specific marketing recommendations for:
+Tier: {tier} ({pricing.get(tier, 'Custom')})
+Maturity: {scores['maturity']:.0f}/100
+Readiness: {scores['marketing_readiness']:.0f}/100
+
+Recommendations should include:
+- Which package to start with
+- Key marketing channels to focus on
+- Realistic lead generation targets
+- Quick wins and priorities
+
+Keep each recommendation to one clear line."""
+
+        try:
+            response = await self.openai_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=200,
+                temperature=0.6
+            )
+            content = response.choices[0].message.content.strip()
+            recommendations = [line.strip('- ').strip() for line in content.split('\n') if line.strip()]
+            return recommendations[:5]
+        except Exception as e:
+            logger.error(f"GPT recommendations failed: {e}. Falling back to template.")
+            return self._generate_recommendations(scores)
     
     def _build_structured_persona(
         self,
