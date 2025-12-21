@@ -635,15 +635,6 @@ function updateJobProgress(jobId, message) {
 
 // API Routes
 
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        active_jobs: Object.keys(jobs).length,
-        timestamp: new Date().toISOString()
-    });
-});
-
 // 2FA: Request OTP (mock implementation)
 app.post('/api/request-otp', async (req, res) => {
     const { phone, email } = req.body;
