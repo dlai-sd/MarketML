@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
@@ -703,16 +706,16 @@ app.post('/api/verify-otp', async (req, res) => {
     }
 });
 
-// Search for company matches (disambiguation)
+// Search for company matches (disambiguation) - ENHANCED WITH GROQ
 app.post('/api/search', async (req, res) => {
-    const { query } = req.body;
+    const { query, useGroq } = req.body; // Added useGroq flag
     
     if (!query) {
         return res.status(400).json({ error: 'Query is required' });
     }
     
     try {
-        console.log(`[API] Searching for: ${query}`);
+        console.log(`[API] Searching for: ${query}${useGroq ? ' (with Groq enhancement)' : ''}`);
         
         // Try Indian company search first (CIN-based)
         let indianResults = [];
@@ -723,6 +726,38 @@ app.post('/api/search', async (req, res) => {
             console.error('[API] Indian company search failed:', error.message);
         }
         
+        // NEW: If no Indian results and Groq is available, try Groq extraction
+        let groqEnhancedData = null;
+        if (indianResults.length === 0 && useGroq !== false && process.env.GROQ_API_KEY) {
+            try {
+                console.log(`[API] No CIN results found, trying Groq AI extraction...`);
+                const extractor = new GroqCompanyExtractor();
+                const groqResult = await extractor.extractCompanyData(query);
+                
+                if (groqResult.success && groqResult.data) {
+                    groqEnhancedData = groqResult.data;
+                    console.log(`[API] ✅ Groq found data: CIN=${groqEnhancedData.cin}, Revenue=${groqEnhancedData.latest_revenue}`);
+                    
+                    // Add Groq result as a high-confidence match
+                    indianResults.push({
+                        name: groqEnhancedData.company_name || query,
+                        cin: groqEnhancedData.cin,
+                        status: groqEnhancedData.status,
+                        revenue_display: groqEnhancedData.latest_revenue,
+                        date_of_incorporation: groqEnhancedData.registration_date,
+                        activity: groqEnhancedData.company_class,
+                        source: 'Groq AI (Web Search)',
+                        url: groqEnhancedData.cin ? `https://www.zaubacorp.com/company/${groqEnhancedData.cin}/` : null,
+                        groq_enhanced: true,
+                        full_data: groqEnhancedData // Include all extracted data
+                    });
+                }
+            } catch (groqError) {
+                console.error('[API] Groq enhancement failed:', groqError.message);
+                // Continue without Groq data
+            }
+        }
+        
         // Also search global companies
         const globalResults = await searchCompanyMatches(query);
         console.log(`[API] Found ${globalResults.length} global companies`);
@@ -731,20 +766,23 @@ app.post('/api/search', async (req, res) => {
         const allResults = [
             ...indianResults.map(r => ({
                 name: r.name,
-                url: r.url || `https://www.zaubacorp.com/company/${r.cin}/`,
+                url: r.url || (r.cin ? `https://www.zaubacorp.com/company/${r.cin}/` : null),
                 domain: r.cin ? `CIN: ${r.cin}` : null,
                 description: buildIndianCompanyDescription(r),
                 source: r.source,
-                confidence: 'high',
+                confidence: r.groq_enhanced ? 'high' : 'high',
                 verified: true,
                 cin: r.cin,
                 revenue_inr_millions: r.revenue_inr_millions,
                 revenue_usd_millions: r.revenue_usd_millions,
-                status: r.status
+                status: r.status,
+                groq_enhanced: r.groq_enhanced || false,
+                full_data: r.full_data || null // Include Groq full data if available
             })),
             ...globalResults.map(r => ({
                 ...r,
-                verified: false
+                verified: false,
+                groq_enhanced: false
             }))
         ];
         
@@ -754,7 +792,9 @@ app.post('/api/search', async (req, res) => {
         res.json({
             query: query,
             matches: matches,
-            count: matches.length
+            count: matches.length,
+            groq_used: !!groqEnhancedData,
+            groq_available: !!process.env.GROQ_API_KEY
         });
     } catch (error) {
         console.error('Search error:', error);

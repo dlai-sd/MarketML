@@ -742,7 +742,7 @@
             selectedCompany = null;
             
             // Show loading
-            document.getElementById('searchResults').innerHTML = '<div style="text-align:center;color:#667eea;">🔍 Searching for "' + query + '"...</div>';
+            document.getElementById('searchResults').innerHTML = '<div style="text-align:center;color:#667eea;">🔍 Searching for "' + query + '"...<br><small>Using Groq AI + Web Search</small></div>';
             document.getElementById('searchBtn').disabled = true;
             document.getElementById('searchBtn').textContent = '🔍 Searching...';
             
@@ -750,11 +750,11 @@
                 const response = await fetch('/api/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
+                    body: JSON.stringify({ query: query, useGroq: true }) // Enable Groq
                 });
                 
                 const data = await response.json();
-                displaySearchResults(data.matches, query);
+                displaySearchResults(data.matches, query, data.groq_used, data.groq_available);
                 
             } catch (error) {
                 document.getElementById('searchResults').innerHTML = '<div style="text-align:center;color:#e74c3c;">❌ Search failed: ' + error.message + '</div>';
@@ -765,7 +765,7 @@
         }
         
         // Display search results
-        function displaySearchResults(matches, query) {
+        function displaySearchResults(matches, query, groqUsed, groqAvailable) {
             const container = document.getElementById('searchResults');
             
             if (!matches || matches.length === 0) {
@@ -777,7 +777,16 @@
             // Store matches globally
             searchMatches = matches;
             
-            let html = '<div style="margin-bottom:15px;"><strong>Found ' + matches.length + ' match' + (matches.length > 1 ? 'es' : '') + ' for "' + query + '"</strong><br><small style="color:#666;">Click to select and view details</small></div>';
+            let html = '<div style="margin-bottom:15px;"><strong>Found ' + matches.length + ' match' + (matches.length > 1 ? 'es' : '') + ' for "' + query + '"</strong>';
+            
+            // Show Groq badge if used
+            if (groqUsed) {
+                html += ' <span style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;padding:3px 8px;border-radius:12px;font-size:11px;margin-left:8px;">🤖 GROQ AI ENHANCED</span>';
+            } else if (groqAvailable) {
+                html += ' <span style="background:#f0f0f0;color:#666;padding:3px 8px;border-radius:12px;font-size:11px;margin-left:8px;">💡 Groq available</span>';
+            }
+            
+            html += '<br><small style="color:#666;">Click to select and view details</small></div>';
             
             // Scrollable container with max 5 visible items
             html += '<div class="search-results-container">';
@@ -786,10 +795,11 @@
                 const confidenceClass = 'confidence-' + match.confidence;
                 const matchId = 'match-' + idx;
                 const verifiedBadge = match.verified ? ' <span style="background:#4caf50;color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:5px;">✓ CIN VERIFIED</span>' : '';
+                const groqBadge = match.groq_enhanced ? ' <span style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:5px;">🤖 AI</span>' : '';
                 
                 html += '<div class="search-result-card" id="' + matchId + '" onclick="selectCompany(' + idx + ')">';
                 html += '<div class="selection-badge">✓ SELECTED</div>';
-                html += '<div class="search-result-title">📍 ' + escapeHtml(match.name) + verifiedBadge + '</div>';
+                html += '<div class="search-result-title">📍 ' + escapeHtml(match.name) + verifiedBadge + groqBadge + '</div>';
                 html += '<div class="search-result-description">' + escapeHtml(match.description.substring(0, 150)) + (match.description.length > 150 ? '...' : '') + '</div>';
                 html += '<div class="search-result-meta">';
                 html += '<span>🔍 Source: ' + match.source + '</span>';
@@ -814,6 +824,24 @@
                 }
                 html += '<div class="detail-row"><span class="detail-label">📊 Source:</span><span class="detail-value">' + match.source + '</span></div>';
                 html += '<div class="detail-row"><span class="detail-label">✅ Match:</span><span class="detail-value">' + match.confidence.toUpperCase() + ' confidence</span></div>';
+                
+                // Show extended Groq data if available
+                if (match.full_data) {
+                    html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;"><small style="color:#667eea;font-weight:bold;">🤖 AI-Extracted Additional Data:</small></div>';
+                    if (match.full_data.directors && match.full_data.directors.length > 0) {
+                        html += '<div class="detail-row"><span class="detail-label">👥 Directors:</span><span class="detail-value">' + match.full_data.directors.length + ' found</span></div>';
+                    }
+                    if (match.full_data.authorized_capital && match.full_data.authorized_capital !== 'Not available') {
+                        html += '<div class="detail-row"><span class="detail-label">💼 Auth. Capital:</span><span class="detail-value">' + match.full_data.authorized_capital + '</span></div>';
+                    }
+                    if (match.full_data.paid_up_capital && match.full_data.paid_up_capital !== 'Not available') {
+                        html += '<div class="detail-row"><span class="detail-label">💵 Paid Capital:</span><span class="detail-value">' + match.full_data.paid_up_capital + '</span></div>';
+                    }
+                    if (match.full_data.financial_year && match.full_data.financial_year !== 'Not available') {
+                        html += '<div class="detail-row"><span class="detail-label">📅 FY:</span><span class="detail-value">' + match.full_data.financial_year + '</span></div>';
+                    }
+                }
+                
                 html += '</div>';
                 
                 html += '</div>';
