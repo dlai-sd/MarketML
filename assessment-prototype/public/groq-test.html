@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groq Company Data Extractor - Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .cost-info {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .cost-info h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .cost-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .cost-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .cost-card.groq {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+
+        .cost-card.api-setu {
+            background: #ffebee;
+            border: 2px solid #f44336;
+        }
+
+        .cost-card .label {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .cost-card .price {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-tests {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-test-btn {
+            padding: 8px 15px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-test-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .results {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .data-section {
+            margin-bottom: 25px;
+        }
+
+        .data-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .data-item {
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .data-item .label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .data-item .value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .data-item .value.not-available {
+            color: #999;
+            font-style: italic;
+        }
+
+        .directors-list {
+            list-style: none;
+        }
+
+        .director-card {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4caf50;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .confidence-high {
+            background: #4caf50;
+            color: white;
+        }
+
+        .confidence-medium {
+            background: #ff9800;
+            color: white;
+        }
+
+        .confidence-low {
+            background: #f44336;
+            color: white;
+        }
+
+        .sources {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 6px;
+        }
+
+        .sources h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .sources ul {
+            list-style: none;
+        }
+
+        .sources li {
+            padding: 5px 0;
+        }
+
+        .sources a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+
+        .sources a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Groq Company Data Extractor</h1>
+            <p class="subtitle">AI-powered Indian company data extraction at 99% lower cost</p>
+        </div>
+
+        <div class="cost-info">
+            <h3>💰 Cost Comparison (500 companies/day)</h3>
+            <div class="cost-comparison">
+                <div class="cost-card groq">
+                    <div class="label">Groq + Web Search</div>
+                    <div class="price">$5-15/mo</div>
+                    <div style="font-size: 0.9em; margin-top: 8px; color: #4caf50;">✅ Recommended</div>
+                </div>
+                <div class="cost-card api-setu">
+                    <div class="label">API Setu Enterprise</div>
+                    <div class="price">₹1.2L-1.8L/mo</div>
+                    <div style="font-size: 0.9em; margin-top: 8px; color: #f44336;">❌ Too Expensive</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <div class="input-group">
+                <input type="text" id="companyName" placeholder="Enter company name (e.g., Yashus Digital Marketing)" />
+                <button class="btn-primary" onclick="extractData()" id="extractBtn">
+                    🔍 Extract Data
+                </button>
+            </div>
+            
+            <div class="quick-tests">
+                <strong style="margin-right: 10px;">Quick Test:</strong>
+                <button class="quick-test-btn" onclick="setCompany('Yashus Digital Marketing')">Yashus Digital Marketing</button>
+                <button class="quick-test-btn" onclick="setCompany('DLAI Satellite Data')">DLAI Satellite Data</button>
+                <button class="quick-test-btn" onclick="setCompany('Infosys')">Infosys</button>
+                <button class="quick-test-btn" onclick="setCompany('Wipro')">Wipro</button>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        function setCompany(name) {
+            document.getElementById('companyName').value = name;
+        }
+
+        async function extractData() {
+            const companyName = document.getElementById('companyName').value.trim();
+            
+            if (!companyName) {
+                alert('Please enter a company name');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('results');
+            const extractBtn = document.getElementById('extractBtn');
+            
+            // Show loading
+            resultsDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <h3>🤖 Groq AI is extracting data...</h3>
+                    <p>Searching web and analyzing company information</p>
+                </div>
+            `;
+            resultsDiv.classList.add('show');
+            extractBtn.disabled = true;
+            extractBtn.textContent = '⏳ Processing...';
+
+            try {
+                const response = await fetch('/api/company-data/groq', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ companyName })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayResults(result);
+                } else {
+                    displayError(result.error || result.message);
+                }
+
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                extractBtn.disabled = false;
+                extractBtn.textContent = '🔍 Extract Data';
+            }
+        }
+
+        function displayResults(result) {
+            const data = result.data;
+            const confidenceClass = `confidence-${data.confidence || 'medium'}`;
+
+            let html = `
+                <h2 style="margin-bottom: 20px;">
+                    ${result.company_name}
+                    <span class="confidence-badge ${confidenceClass}">
+                        ${(data.confidence || 'medium').toUpperCase()}
+                    </span>
+                </h2>
+
+                <div class="data-section">
+                    <h3>🏢 Company Information</h3>
+                    <div class="data-grid">
+                        ${createDataItem('CIN', data.cin)}
+                        ${createDataItem('Status', data.status)}
+                        ${createDataItem('Company Class', data.company_class)}
+                        ${createDataItem('Registration Date', data.registration_date)}
+                        ${createDataItem('ROC', data.roc)}
+                        ${createDataItem('PAN', data.pan)}
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3>💰 Financial Information</h3>
+                    <div class="data-grid">
+                        ${createDataItem('Authorized Capital', data.authorized_capital)}
+                        ${createDataItem('Paid-up Capital', data.paid_up_capital)}
+                        ${createDataItem('Financial Year', data.financial_year)}
+                        ${createDataItem('Latest Revenue', data.latest_revenue)}
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3>👥 Directors</h3>
+                    ${displayDirectors(data.directors)}
+                </div>
+
+                <div class="data-section">
+                    <h3>📍 Contact Information</h3>
+                    <div class="data-grid">
+                        ${createDataItem('Address', data.address, true)}
+                        ${createDataItem('Email', data.email)}
+                        ${createDataItem('Phone', data.phone)}
+                    </div>
+                </div>
+            `;
+
+            if (result.sources && result.sources.length > 0) {
+                html += `
+                    <div class="sources">
+                        <h4>🔗 Data Sources</h4>
+                        <ul>
+                            ${result.sources.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (data.token_usage) {
+                html += `
+                    <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
+                        📊 Tokens used: ${data.token_usage.total_tokens || 'N/A'} 
+                        | Extraction method: ${data.extraction_method || 'groq_web_search'}
+                    </p>
+                `;
+            }
+
+            html += `
+                <p style="margin-top: 10px; color: #666; font-size: 0.85em;">
+                    ⏱️ Extracted at: ${new Date(result.timestamp).toLocaleString()}
+                </p>
+            `;
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function createDataItem(label, value, fullWidth = false) {
+            const displayValue = value && value !== 'Not available' ? value : '<span class="not-available">Not available</span>';
+            return `
+                <div class="data-item" ${fullWidth ? 'style="grid-column: 1 / -1;"' : ''}>
+                    <div class="label">${label}</div>
+                    <div class="value ${!value || value === 'Not available' ? 'not-available' : ''}">${displayValue}</div>
+                </div>
+            `;
+        }
+
+        function displayDirectors(directors) {
+            if (!directors || directors.length === 0) {
+                return '<p class="not-available" style="font-style: italic; color: #999;">No director information available</p>';
+            }
+
+            return `
+                <ul class="directors-list">
+                    ${directors.map(dir => `
+                        <li class="director-card">
+                            <strong>${dir.name || 'Unknown'}</strong>
+                            ${dir.din ? `<br><span style="color: #666;">DIN: ${dir.din}</span>` : ''}
+                            ${dir.appointment_date ? `<br><span style="color: #666;">Appointed: ${dir.appointment_date}</span>` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        function displayError(message) {
+            document.getElementById('results').innerHTML = `
+                <div class="error">
+                    <h3>❌ Error</h3>
+                    <p>${message}</p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">
+                        <strong>Possible reasons:</strong><br>
+                        • GROQ_API_KEY not configured in environment<br>
+                        • Company name not found in search results<br>
+                        • Network/API timeout
+                    </p>
+                </div>
+            `;
+        }
+
+        // Enter key support
+        document.getElementById('companyName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                extractData();
+            }
+        });
+    </script>
+</body>
+</html>

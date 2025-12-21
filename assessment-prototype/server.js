@@ -12,6 +12,9 @@ const { analyzeSocialMedia } = require('./scrapers/social');
 const { analyzeReputation } = require('./scrapers/reputation');
 const { searchIndianCompany, isValidCIN } = require('./scrapers/indianCompany');
 
+// Import Groq-powered company data extractor
+const GroqCompanyExtractor = require('./scrapers/groqCompanyData');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -816,11 +819,38 @@ app.get('/api/assess/:jobId', (req, res) => {
     res.json(jobs[jobId]);
 });
 
+// NEW: Groq-powered company data extraction endpoint
+app.post('/api/company-data/groq', async (req, res) => {
+    const { companyName } = req.body;
+    
+    if (!companyName) {
+        return res.status(400).json({ error: 'companyName is required' });
+    }
+    
+    try {
+        console.log(`[GROQ API] Extracting data for: ${companyName}`);
+        
+        const extractor = new GroqCompanyExtractor();
+        const result = await extractor.extractCompanyData(companyName);
+        
+        res.json(result);
+        
+    } catch (error) {
+        console.error('[GROQ API] Extraction failed:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Data extraction failed', 
+            message: error.message 
+        });
+    }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         active_jobs: Object.keys(jobs).length,
+        groq_api_configured: !!process.env.GROQ_API_KEY,
         timestamp: new Date()
     });
 });
@@ -829,4 +859,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Assessment API running on port ${PORT}`);
     console.log(`Open http://localhost:${PORT} to test`);
+    console.log(`\nNew Groq endpoint: POST /api/company-data/groq`);
+    console.log(`Test with: curl -X POST http://localhost:${PORT}/api/company-data/groq -H "Content-Type: application/json" -d '{"companyName":"Yashus Digital Marketing"}'`);
 });
