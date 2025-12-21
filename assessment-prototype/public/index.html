@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Marketing Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .progress.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .progress-text {
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        .entity-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .entity-card.subject {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left-width: 6px;
+        }
+        
+        .entity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .entity-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .tier-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .tier-small {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        
+        .tier-medium {
+            background: #74b9ff;
+            color: #0984e3;
+        }
+        
+        .tier-large {
+            background: #55efc4;
+            color: #00b894;
+        }
+        
+        .overall-score {
+            font-size: 3em;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .dimensions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .dimension {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .dimension:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .dimension.selected {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-color: #667eea;
+        }
+        
+        .dimension-name {
+            font-size: 0.85em;
+            color: #666;
+            text-transform: capitalize;
+        }
+        
+        .dimension-score {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .competitors-header {
+            font-size: 1.5em;
+            margin: 30px 0 20px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .score-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .score-fill {
+            height: 100%;
+         
+        
+        .explanation-frame {
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .explanation-frame.active {
+            display: block;
+        }
+        
+        .explanation-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .explanation-text {
+            color: #555;
+            line-height: 1.8;
+            font-size: 1em;
+        }
+        
+        .explanation-close {
+            float: right;
+            cursor: pointer;
+            color: #999;
+            font-size: 1.5em;
+            line-height: 1;
+            transition: color 0.3s;
+        }
+        
+        .explanation-close:hover {
+            color: #667eea;
+        }   background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+        
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Digital Marketing Assessment</h1>
+            <p>Analyze your digital marketing presence and compare with competitors</p>
+        </div>
+        
+        <div class="card">
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    id="subjectInput" 
+                    placeholder="Enter company or brand name..."
+                    onkeypress="if(event.key==='Enter') startAssessment()"
+                >
+                <button id="assessBtn" onclick="startAssessment()">
+                    Assess Now
+                </button>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+            
+            <div class="progress" id="progress">
+                <div class="spinner"></div>
+                <div class="progress-text" id="progressPhase">Initializing...</div>
+                <div class="progress-text" id="progressDetail"></div>
+                <div class="progress-text" id="progressCount"></div>
+            </div>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="card">
+                <h2>📊 Assessment Results</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let pollInterval;
+        let lastCompetitorCount = 0;
+        
+        async function startAssessment() {
+            const subject = document.getElementById('subjectInput').value.trim();
+            
+            if (!subject) {
+                showError('Please enter a company or brand name');
+                return;
+            }
+            
+            // Reset UI
+            hideError();
+            hideResults();
+            showProgress();
+            disableButton(true);
+            lastCompetitorCount = 0;
+            
+            try {
+                // Start assessment
+                const response = await fetch('/api/assess', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to start assessment');
+                }
+                
+                const data = await response.json();
+                pollStatus(data.job_id);
+                
+            } catch (error) {
+                showError(error.message);
+                hideProgress();
+                disableButton(false);
+            }
+        }
+        
+        async function pollStatus(jobId) {
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/assess/${jobId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get status');
+                    }
+                    
+                    const data = await response.json();
+                    updateProgress(data);
+                    
+                    // Progressive rendering: show partial results as they come in
+                    if (data.partial_result && data.partial_result.subject) {
+                        const currentCount = (data.partial_result.competitors || []).length;
+                        
+                        // Only update if we have new data
+                        if (currentCount >= lastCompetitorCount) {
+                            displayResults(data.partial_result, false); // false = not complete yet
+                            lastCompetitorCount = currentCount;
+                        }
+                    }
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #f0f4ff; border-radius: 6px; font-size: 0.9em; color: #666;">
+                        💡 Click any dimension card above to learn more about how it's measured
+                    </div>
+                </div>
+                
+                <div class="explanation-frame" id="explanationFrame">
+                    <span class="explanation-close" onclick="hideExplanation()">×</span>
+                    <div class="explanation-title" id="explanationTitle"></div>
+                    <div class="explanation-text" id="explanationText"></div>
+                    if (data.status === 'complete') {
+                        clearInterval(pollInterval);
+                        hideProgress();
+                        displayResults(data.result, true); // true = complete
+                        disableButton(false);
+                    }
+                    
+                    if (data.status === 'failed') {
+                        clearInterval(pollInterval);
+                        showError(data.error || 'Assessment failed');
+                        hideProgress();
+                        disableButton(false);
+                    }
+                    
+                } catch (error) {
+                    clearInterval(pollInterval);
+                    showError(error.message);
+                    hideProgress();
+                    disableButton(false);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+        
+        function updateProgress(data) {
+            const { progress } = data;
+            if (!progress) return;
+            
+            document.getElementById('progressPhase').textContent = 
+                progress.phase === 'discovery' ? '🔍 Discovering competitors...' :
+                progress.phase === 'analysis' ? '📊 Analyzing digital presence...' :
+                progress.phase === 'complete' ? '✅ Complete!' : 
+                'Processing...';
+            
+            document.getElementById('progressDetail').textContent = 
+                progress.message || '';
+            
+            document.getElementById('progressCount').textContent = 
+                `${progress.completed || 0} / ${progress.total || 11} completed`;
+        }
+        
+        function displayResults(result, isComplete = false) {
+            const { subject, competitors } = result;
+            
+            let html = `
+                <div class="entity-card subject" style="animation: fadeIn 0.5s;">
+                    <div class="entity-header">
+                        <span class="entity-name">🎯 ${subject.name}</span>
+                        <span class="tier-badge tier-${subject.tier}">
+                            ${subject.tier} Business
+                        </span>
+                    </div>
+                    <div class="overall-score">${subject.score} / 7</div>
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: ${(subject.score / 7) * 100}%"></div>
+                    </div>
+                    <div class="dimensions">
+                        ${renderDimensions(subject.scoring_points)}
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #f0f4ff; border-radius: 6px; font-size: 0.9em; color: #666;">
+                        💡 Click any dimension card above to learn more about how it's measured
+                    </div>
+                </div>
+                
+                <div class="explanation-frame" id="explanationFrame">
+                    <span class="explanation-close" onclick="hideExplanation()">×</span>
+                    <div class="explanation-title" id="explanationTitle"></div>
+                    <div class="explanation-text" id="explanationText"></div>
+                </div>
+                
+                <h3 class="competitors-header">
+                    🏆 Competitors ${!isComplete ? `(${competitors.length}/10 analyzed...)` : ''}
+                </h3>
+            `;
+            
+            competitors.forEach((comp, idx) => {
+                html += `
+                    <div class="entity-card" style="animation: slideIn 0.5s ease ${idx * 0.1}s both;">
+                        <div class="entity-header">
+                            <span class="entity-name">#${idx + 1} ${comp.name}</span>
+                            <span class="tier-badge tier-${comp.tier}">
+                                ${comp.tier}
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="font-size: 2em; font-weight: 600; color: #667eea;">
+                                ${comp.score}
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="score-bar">
+                                    <div class="score-fill" style="width: ${(comp.score / 7) * 100}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dimensions">
+                            ${renderDimensions(comp.scoring_points)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Show loading placeholder for remaining competitors
+            if (!isComplete && competitors.length < 10) {
+                for (let i = competitors.length; i < 10; i++) {
+                    html += `
+                        <div class="entity-card" style="opacity: 0.3; border-left: 4px solid #ccc;">
+                            <div class="entity-header">
+                                <span class="entity-name">⏳ Analyzing competitor ${i + 1}...</span>
+                            </div>
+                            <div class="spinner" style="width: 30px; height: 30px; margin: 20px auto;"></div>
+                        </div>
+                    `;
+                }
+            }
+            
+            document.getElementById('resultsContent').innerHTML = html;
+            showResults();
+        }
+        
+        const dimensionExplanations = {
+            'content_marketing': {
+                title: '📝 Content Marketing',
+                text: 'Measures your content creation and publishing strategy. We analyze blog post frequency, content depth, and topic coverage across your website. High scores indicate regular, quality content that engages audiences and establishes expertise. This dimension reflects your commitment to educating and attracting customers through valuable information. Strong content marketing is essential for SEO, thought leadership, and building trust with potential customers.'
+            },
+            'seo_presence': {
+                title: '🔍 SEO Presence',
+                text: 'Evaluates your search engine visibility and authority. We estimate domain authority based on backlinks, search result prominence, and knowledge panel presence. Higher scores mean your website appears more frequently in search results and is trusted by search engines. This dimension shows how easily potential customers can discover you organically. Good SEO presence reduces customer acquisition costs and establishes market credibility.'
+            },
+            'social_engagement': {
+                title: '👥 Social Engagement',
+                text: 'Assesses your social media footprint and audience interaction. We count followers across platforms (LinkedIn, Twitter, Facebook, Instagram, YouTube, TikTok) and estimate engagement rates. Strong social engagement indicates active community building and brand awareness. This dimension reflects your ability to connect with audiences where they spend time online. Active social presence amplifies your message and creates brand advocates.'
+            },
+            'conversion_signals': {
+                title: '🎯 Conversion Signals',
+                text: 'Analyzes how effectively your digital presence drives actions. We detect calls-to-action, lead capture forms, testimonials, analytics tracking, and social proof elements. High scores indicate a website optimized for converting visitors into customers or leads. This dimension shows your focus on measurable business outcomes from marketing efforts. Effective conversion optimization directly impacts revenue and ROI.'
+            },
+            'brand_authority': {
+                title: '⭐ Brand Authority',
+                text: 'Measures your reputation and market recognition. We count media mentions, news coverage, review platforms, average ratings, and overall sentiment. Higher authority means industry recognition and customer trust. This dimension reflects how your brand is perceived in the marketplace and by the media. Strong brand authority shortens sales cycles and commands premium pricing.'
+            },
+            'technical_optimization': {
+                title: '⚙️ Technical Optimization',
+                text: 'Evaluates your website technical performance and best practices. We analyze page speed, mobile responsiveness, structured data markup, and analytics implementation. Good technical optimization ensures visitors have smooth experiences across devices. This dimension impacts both SEO rankings and user satisfaction. Technical excellence is foundational to all digital marketing success.'
+            },
+            'thought_leadership': {
+                title: '🎤 Thought Leadership',
+                text: 'Assesses your position as an industry expert and innovator. We look for speaking engagements, published articles, conference participation, and executive visibility. High scores indicate recognized expertise that influences industry conversations. This dimension shows your ability to shape market thinking and attract high-quality opportunities. Thought leadership differentiates you from competitors and attracts premium clients.'
+            }
+        };
+        
+        function showExplanation(dimensionKey, evt) {
+            const explanation = dimensionExplanations[dimensionKey];
+            if (!explanation) return;
+            
+            document.getElementById('explanationTitle').innerHTML = explanation.title;
+            document.getElementById('explanationText').innerHTML = explanation.text;
+            document.getElementById('explanationFrame').classList.add('active');
+            
+            // Highlight selected dimension
+            document.querySelectorAll('.dimension').forEach(el => el.classList.remove('selected'));
+            if (evt) {
+                evt.target.closest('.dimension').classList.add('selected');
+            }
+            
+            // Smooth scroll to explanation
+            document.getElementById('explanationFrame').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function hideExplanation() {
+            document.getElementById('explanationFrame').classList.remove('active');
+            document.querySelectorAll('.dimension').forEach(el => el.classList.remove('selected'));
+        }
+        
+        function renderDimensions(dimensions) {
+            return Object.entries(dimensions)
+                .map(([name, score]) => `
+                    <div class="dimension" onclick="showExplanation('${name}', event)">
+                        <span class="dimension-name">${name.replace(/_/g, ' ')}</span>
+                        <span class="dimension-score">${score}/7</span>
+                    </div>
+                `).join('');
+        }
+        
+        function showProgress() {
+            document.getElementById('progress').classList.add('active');
+        }
+        
+        function hideProgress() {
+            document.getElementById('progress').classList.remove('active');
+        }
+        
+        function showResults() {
+            document.getElementById('results').classList.add('active');
+        }
+        
+        function hideResults() {
+            document.getElementById('results').classList.remove('active');
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('errorMsg');
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+        }
+        
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('active');
+        }
+        
+        function disableButton(disabled) {
+            document.getElementById('assessBtn').disabled = disabled;
+            document.getElementById('subjectInput').disabled = disabled;
+        }
+    </script>
+</body>
+</html>

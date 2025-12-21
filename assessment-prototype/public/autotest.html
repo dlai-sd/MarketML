@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Assessment</title>
+</head>
+<body>
+    <h1>Quick Test</h1>
+    <p>Testing API call...</p>
+    <div id="output"></div>
+    <script>
+        document.getElementById('output').innerHTML = 'Starting test...<br>';
+        
+        fetch('/api/assess', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject: 'DLAI Satellite Data' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('output').innerHTML += 'Job ID: ' + data.job_id + '<br>';
+            document.getElementById('output').innerHTML += 'Status: ' + data.status + '<br>';
+            document.getElementById('output').innerHTML += '<p>API is working! Check server logs for processing.</p>';
+        })
+        .catch(err => {
+            document.getElementById('output').innerHTML += 'ERROR: ' + err + '<br>';
+        });
+    </script>
+</body>
+</html>

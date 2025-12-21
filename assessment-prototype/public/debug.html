@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Test Page</h1>
+    <button onclick="testClick()">Test Button</button>
+    <div id="output" style="margin-top: 20px; padding: 20px; background: #f0f0f0;"></div>
+    
+    <script>
+        console.log('Script loaded');
+        
+        function testClick() {
+            console.log('Button clicked!');
+            document.getElementById('output').innerHTML = 'Button clicked at: ' + new Date().toISOString() + '<br>';
+            
+            // Test fetch
+            document.getElementById('output').innerHTML += 'Testing API...<br>';
+            
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('output').innerHTML += 'API works! ' + JSON.stringify(data) + '<br>';
+                })
+                .catch(error => {
+                    document.getElementById('output').innerHTML += 'API error: ' + error.message + '<br>';
+                });
+        }
+        
+        // Auto-test on load
+        setTimeout(() => {
+            document.getElementById('output').innerHTML += 'Auto-test: Page loaded successfully<br>';
+        }, 1000);
+    </script>
+</body>
+</html>

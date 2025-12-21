@@ -65,50 +65,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API router
+# Include API router FIRST (before static files)
 app.include_router(api_router, prefix=settings.api_v1_prefix)
-
-# Serve frontend static files (eliminates CORS issues - same origin)
-frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
-if os.path.exists(frontend_path):
-    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
-    logger.info(f"Frontend static files mounted from: {frontend_path}")
-
-# Mobile subdomain detection and routing
-@app.middleware("http")
-async def mobile_subdomain_handler(request: Request, call_next):
-    """Detect m.subdomain and mobile User-Agent, serve appropriate version."""
-    host = request.headers.get("host", "")
-    user_agent = request.headers.get("user-agent", "").lower()
-    
-    # Check if mobile subdomain or mobile User-Agent
-    is_mobile_subdomain = host.startswith("m.")
-    is_mobile_ua = any(x in user_agent for x in ["mobile", "android", "iphone", "ipad"])
-    
-    # Store in request state for use in route handlers
-    request.state.is_mobile = is_mobile_subdomain or is_mobile_ua
-    
-    response = await call_next(request)
-    return response
-
-@app.get("/frontend")
-@app.get("/frontend/")
-async def serve_frontend(request: Request):
-    """Serve appropriate frontend version based on device."""
-    is_mobile = getattr(request.state, "is_mobile", False)
-    
-    # Determine which HTML file to serve
-    if is_mobile:
-        html_file = Path(frontend_path) / "index-mobile.html"
-        if not html_file.exists():
-            html_file = Path(frontend_path) / "index.html"  # Fallback
-    else:
-        html_file = Path(frontend_path) / "index.html"
-    
-    with open(html_file, "r") as f:
-        content = f.read()
-    
-    return HTMLResponse(content=content)
 
 # Prometheus metrics endpoint
 if settings.enable_monitoring:
@@ -129,9 +87,9 @@ async def health_check():
     )
 
 
-@app.get("/")
+@app.get("/api")
 async def root():
-    """Root endpoint - redirects to frontend."""
+    """Root endpoint - API info."""
     # Detect environment and construct URLs
     codespace_name = os.getenv("CODESPACE_NAME")
     domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "app.github.dev")
@@ -148,11 +106,34 @@ async def root():
         "version": "0.1.0",
         "environment": settings.app_env,
         "urls": {
-            "frontend": f"{base_url}/static/index.html",
             "api_docs": f"{base_url}{settings.api_v1_prefix}/docs",
             "health": f"{base_url}/health"
         }
     }
+
+# Mobile subdomain detection and routing
+@app.middleware("http")
+async def mobile_subdomain_handler(request: Request, call_next):
+    """Detect m.subdomain and mobile User-Agent, serve appropriate version."""
+    host = request.headers.get("host", "")
+    user_agent = request.headers.get("user-agent", "").lower()
+    
+    # Check if mobile subdomain or mobile User-Agent
+    is_mobile_subdomain = host.startswith("m.")
+    is_mobile_ua = any(x in user_agent for x in ["mobile", "android", "iphone", "ipad"])
+    
+    # Store in request state for use in route handlers
+    request.state.is_mobile = is_mobile_subdomain or is_mobile_ua
+    
+    response = await call_next(request)
+    return response
+
+# Serve frontend static files LAST (catch-all for root path)
+# This eliminates CORS issues - frontend and API on same origin!
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+    logger.info(f"Frontend mounted at root from: {frontend_path}")
 
 
 if __name__ == "__main__":

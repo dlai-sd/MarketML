@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MarketML Test</title>
+    <style>
+        body { font-family: Arial; padding: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; font-size: 16px; }
+        button { background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0052a3; }
+        #result { margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 4px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 MarketML Quick Test</h1>
+        <p>Test persona generation API</p>
+        
+        <input type="text" id="name" placeholder="Enter name (e.g., Yogesh Khandge)" value="Test User">
+        <input type="text" id="location" placeholder="Enter location (e.g., Pune)" value="Mumbai">
+        <button onclick="testGenerate()">Generate Persona</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = '/v1';
+        
+        async function testGenerate() {
+            const result = document.getElementById('result');
+            const name = document.getElementById('name').value;
+            const location = document.getElementById('location').value;
+            
+            result.textContent = 'Starting generation...';
+            
+            try {
+                // Step 1: Start generation
+                const genResp = await fetch(`${API_URL}/personas/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, location })
+                });
+                
+                if (!genResp.ok) {
+                    throw new Error(`API Error: ${genResp.status}`);
+                }
+                
+                const { job_id } = await genResp.json();
+                result.textContent = `✅ Job started: ${job_id}\n\nPolling for completion...`;
+                
+                // Step 2: Poll for completion
+                let attempts = 0;
+                const maxAttempts = 60; // 30 seconds
+                
+                const poll = setInterval(async () => {
+                    attempts++;
+                    
+                    const jobResp = await fetch(`${API_URL}/jobs/${job_id}`);
+                    const job = await jobResp.json();
+                    
+                    result.textContent = `Job: ${job_id}\nStatus: ${job.status}\nProgress: ${job.progress}%\nStep: ${job.current_step}`;
+                    
+                    if (job.status === 'completed') {
+                        clearInterval(poll);
+                        result.textContent += `\n\n✅ COMPLETED!\n\nPersona ID: ${job.persona_id}`;
+                        
+                        // Fetch persona
+                        const personaResp = await fetch(`${API_URL}/personas/${job.persona_id}`);
+                        const persona = await personaResp.json();
+                        result.textContent += `\n\nPersona:\n${JSON.stringify(persona, null, 2)}`;
+                    } else if (job.status === 'failed') {
+                        clearInterval(poll);
+                        result.textContent += `\n\n❌ FAILED: ${job.error_message}`;
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(poll);
+                        result.textContent += '\n\n⏱️ Timeout - job taking too long';
+                    }
+                }, 500);
+                
+            } catch (error) {
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
