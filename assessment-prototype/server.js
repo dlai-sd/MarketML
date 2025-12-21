@@ -444,6 +444,7 @@ async function analyzeEntity(entityName, jobId) {
     let financialYear = null;
     
     // First try Indian company CIN lookup (most accurate for Indian companies)
+    let indianDataFound = false;
     try {
         const indianResults = await searchIndianCompany(entityName);
         if (indianResults.length > 0) {
@@ -461,6 +462,7 @@ async function analyzeEntity(entityName, jobId) {
             companyROC = indianCompany.roc;
             companyClass = indianCompany.company_class;
             financialYear = indianCompany.financial_year;
+            indianDataFound = true;
             
             if (indianCompany.revenue_usd_millions) {
                 revenue = indianCompany.revenue_usd_millions;
@@ -472,6 +474,73 @@ async function analyzeEntity(entityName, jobId) {
         }
     } catch (error) {
         console.error(`Failed to extract CIN revenue for ${entityName}:`, error.message);
+    }
+    
+    // NEW: Groq AI Fallback - If no CIN data found, try Groq extraction
+    if (!indianDataFound && process.env.GROQ_API_KEY) {
+        try {
+            console.log(`[Groq Fallback] No CIN data for ${entityName}, trying Groq AI...`);
+            const extractor = new GroqCompanyExtractor();
+            const groqResult = await extractor.extractCompanyData(entityName);
+            
+            if (groqResult.success && groqResult.data) {
+                const groqData = groqResult.data;
+                console.log(`[Groq Fallback] ✅ Enhanced data for ${entityName}`);
+                
+                // Map Groq data to our structure
+                cin = groqData.cin !== 'Not available' ? groqData.cin : cin;
+                companyStatus = groqData.status !== 'Not available' ? groqData.status : companyStatus;
+                companyAddress = groqData.address !== 'Not available' ? groqData.address : companyAddress;
+                companyEmail = groqData.email !== 'Not available' ? groqData.email : companyEmail;
+                companyPhone = groqData.phone !== 'Not available' ? groqData.phone : companyPhone;
+                companyPAN = groqData.pan !== 'Not available' ? groqData.pan : companyPAN;
+                authorizedCapital = groqData.authorized_capital !== 'Not available' ? groqData.authorized_capital : authorizedCapital;
+                paidUpCapital = groqData.paid_up_capital !== 'Not available' ? groqData.paid_up_capital : paidUpCapital;
+                dateOfIncorporation = groqData.registration_date !== 'Not available' ? groqData.registration_date : dateOfIncorporation;
+                companyROC = groqData.roc !== 'Not available' ? groqData.roc : companyROC;
+                companyClass = groqData.company_class !== 'Not available' ? groqData.company_class : companyClass;
+                financialYear = groqData.financial_year !== 'Not available' ? groqData.financial_year : financialYear;
+                
+                // Directors
+                if (groqData.directors && Array.isArray(groqData.directors) && groqData.directors.length > 0) {
+                    companyDirectors = groqData.directors.filter(d => d.name && d.name !== 'Unknown');
+                }
+                
+                // Revenue from Groq
+                if (groqData.latest_revenue && groqData.latest_revenue !== 'Not available' && !revenue) {
+                    // Parse revenue from Groq format (e.g., "₹1.87 Crore")
+                    const revenueMatch = groqData.latest_revenue.match(/₹\s*([\d.]+)\s*Crore/i);
+                    if (revenueMatch) {
+                        const crores = parseFloat(revenueMatch[1]);
+                        revenueINR = crores;
+                        revenue = crores / 83; // Convert to USD millions (approx)
+                        revenueDisplay = groqData.latest_revenue;
+                        revenueSource = 'Groq AI (Web Search)';
+                        console.log(`[Revenue] ${entityName}: $${revenue.toFixed(2)}M (from Groq AI: ${revenueDisplay})`);
+                    }
+                }
+            }
+        } catch (groqError) {
+            console.error(`[Groq Fallback] Failed for ${entityName}:`, groqError.message);
+            // Continue without Groq data
+        }
+    }
+    
+    // If still no data found, set base defaults for new/unknown companies
+    const hasMinimalData = !cin && !revenue && companyDirectors.length === 0;
+    if (hasMinimalData) {
+        console.log(`[Base Defaults] Setting defaults for ${entityName} (limited data available)`);
+        // Set reasonable base values for scoring
+        if (!companyStatus) companyStatus = 'Active (Assumed)';
+        if (!companyClass) companyClass = 'Private Limited';
+        if (!dateOfIncorporation) {
+            // Assume recent company (2 years old) if no data
+            const year = new Date().getFullYear() - 2;
+            dateOfIncorporation = `01-01-${year}`;
+        }
+        if (!authorizedCapital) authorizedCapital = '100000'; // ₹1L default
+        if (!paidUpCapital) paidUpCapital = '100000'; // ₹1L default
+        // Note: Don't set fake CIN - leave it blank
     }
     
     // Fallback to Wikipedia if no CIN revenue
@@ -533,6 +602,16 @@ async function analyzeEntity(entityName, jobId) {
     const dimensions = scoreDimensions(data, tier, industry, businessModel, companyData);
     const score = calculateOverallScore(dimensions, tier);
     
+    // Adjust rating description for limited data scenarios
+    let dataQuality = 'complete';
+    if (hasMinimalData) {
+        dataQuality = 'limited';
+        dimensions.notes = 'Rating based on available public data and reasonable assumptions. Actual company details may vary.';
+    } else if (!cin) {
+        dataQuality = 'partial';
+        dimensions.notes = 'Rating based on publicly available information. MCA data not found.';
+    }
+    
     return {
         name: entityName,
         tier: tier,
@@ -558,6 +637,7 @@ async function analyzeEntity(entityName, jobId) {
         revenue_source: revenueSource,
         score: score,
         scoring_points: dimensions,
+        data_quality: dataQuality,
         raw_data: data
     };
 }

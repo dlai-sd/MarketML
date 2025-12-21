@@ -14,6 +14,10 @@ class GroqCompanyExtractor {
         this.groqBaseUrl = 'https://api.groq.com/openai/v1';
         this.model = 'llama-3.3-70b-versatile'; // Fast and accurate
         
+        // Google Custom Search API configuration
+        this.googleApiKey = process.env.GOOGLE_API_KEY || '';
+        this.googleCx = process.env.GOOGLE_CX || '';
+        
         // Search configuration
         this.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
     }
@@ -84,12 +88,40 @@ class GroqCompanyExtractor {
     }
 
     /**
-     * Perform Google search and extract results
+     * Perform Google search using Custom Search API
      * @param {string} query 
      * @returns {Promise<Array>}
      */
     async googleSearch(query) {
         try {
+            // Use Google Custom Search API if configured
+            if (this.googleApiKey && this.googleCx) {
+                const searchUrl = 'https://www.googleapis.com/customsearch/v1';
+                const response = await axios.get(searchUrl, {
+                    params: {
+                        key: this.googleApiKey,
+                        cx: this.googleCx,
+                        q: query,
+                        num: 10
+                    },
+                    timeout: 10000
+                });
+
+                const results = [];
+                if (response.data.items) {
+                    response.data.items.forEach(item => {
+                        results.push({
+                            title: item.title || '',
+                            snippet: item.snippet || '',
+                            url: item.link || '',
+                            query: query
+                        });
+                    });
+                }
+                return results;
+            }
+            
+            // Fallback to web scraping (often blocked)
             const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
             const response = await axios.get(searchUrl, {
                 headers: {
