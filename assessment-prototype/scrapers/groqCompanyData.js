@@ -64,9 +64,11 @@ class GroqCompanyExtractor {
     async searchCompanyInfo(companyName) {
         const searches = [
             `${companyName} MCA India CIN registration`,
-            `${companyName} company directors revenue financial year`,
-            `${companyName} authorized capital paid up capital`,
-            `${companyName} ZaubaCorp company details`
+            `${companyName} revenue turnover FY 2024 financial results`,
+            `${companyName} annual report financial year 2023-24`,
+            `${companyName} company directors authorized capital`,
+            `${companyName} ZaubaCorp company financials`,
+            `${companyName} profit loss statement FY24`
         ];
 
         const results = [];
@@ -75,9 +77,9 @@ class GroqCompanyExtractor {
             try {
                 const searchData = await this.googleSearch(query);
                 if (searchData.length > 0) {
-                    results.push(...searchData.slice(0, 3)); // Top 3 results per query
+                    results.push(...searchData.slice(0, 2)); // Top 2 results per query
                 }
-                await this.delay(1000); // Rate limiting
+                await this.delay(800); // Rate limiting
             } catch (error) {
                 console.log(`  ⚠️  Search failed for: ${query}`);
             }
@@ -189,8 +191,11 @@ Extract the following information in JSON format:
   "company_class": "Private/Public/etc",
   "authorized_capital": "Amount in INR",
   "paid_up_capital": "Amount in INR",
-  "financial_year": "FY 2023-24 or latest",
-  "latest_revenue": "Revenue in INR Crores for latest FY",
+  "financial_year": "FY 2023-24 or latest fiscal year",
+  "latest_revenue": "Annual revenue/turnover for latest FY (convert to ₹X Crore format)",
+  "revenue_usd_millions": "Revenue in USD millions if available",
+  "profit_after_tax": "PAT/Net Profit in INR Crore if available",
+  "total_assets": "Total assets in INR Crore if available",
   "pan": "PAN number if available",
   "directors": [
     {
@@ -205,12 +210,20 @@ Extract the following information in JSON format:
   "confidence": "high/medium/low based on data quality"
 }
 
-Instructions:
-1. Extract ONLY information explicitly mentioned in the search results
-2. Use "Not available" for missing fields
-3. For revenue, convert to Crores if needed (e.g., "₹1.87 Crore")
-4. Ensure CIN format is correct if found
-5. Return ONLY valid JSON, no explanations`;
+CRITICAL INSTRUCTIONS FOR FINANCIAL DATA:
+1. Revenue/Turnover is the MOST IMPORTANT field - search aggressively
+2. Look for keywords: "revenue", "turnover", "sales", "income", "topline"
+3. Look for: "FY 2023-24", "FY 2024", "FY24", "FY2023-24", "financial year"
+4. Convert all revenue to standard format: "₹X.XX Crore"
+   - 1 Lakh = 0.01 Crore
+   - 1 Million = 0.1 Crore  
+   - 1 Crore = 1 Crore
+   - $1 Million USD ≈ ₹8.3 Crore (use ₹83/USD exchange rate)
+5. If revenue is in USD, ALSO provide revenue_usd_millions
+6. Extract ONLY information explicitly mentioned in search results
+7. Use "Not available" for missing fields
+8. Ensure CIN format is correct if found
+9. Return ONLY valid JSON, no explanations`;
 
         try {
             console.log('  🤖 Querying Groq API...');

@@ -18,6 +18,9 @@ const { searchIndianCompany, isValidCIN } = require('./scrapers/indianCompany');
 // Import Groq-powered company data extractor
 const GroqCompanyExtractor = require('./scrapers/groqCompanyData');
 
+// Import MCA RoC API service
+const MCACompanyService = require('./scrapers/mcaRocApi');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -443,8 +446,17 @@ async function analyzeEntity(entityName, jobId) {
     let companyClass = null;
     let financialYear = null;
     
-    // First try Indian company CIN lookup (most accurate for Indian companies)
+    // DATA RETRIEVAL PIPELINE (4-tier approach):
+    // Priority 1: MCA RoC API (if CIN known) - 100% accurate government data
+    // Priority 2: Groq→MCA Pipeline - Find CIN, then query MCA
+    // Priority 3: Groq AI Direct - For unregistered companies
+    // Priority 4: Base defaults - Last resort for new/unknown companies
+    
     let indianDataFound = false;
+    let mcaDataUsed = false;
+    const mcaService = new MCACompanyService();
+    
+    // First try Indian company CIN lookup (legacy method)
     try {
         const indianResults = await searchIndianCompany(entityName);
         if (indianResults.length > 0) {
@@ -476,57 +488,157 @@ async function analyzeEntity(entityName, jobId) {
         console.error(`Failed to extract CIN revenue for ${entityName}:`, error.message);
     }
     
-    // NEW: Groq AI Fallback - If no CIN data found, try Groq extraction
+    // PRIORITY 1: If we have CIN but no data, try MCA RoC API directly
+    if (cin && !indianDataFound && mcaService.isAvailable()) {
+        try {
+            console.log(`[MCA Direct] Found CIN ${cin}, querying MCA RoC API...`);
+            const mcaResult = await mcaService.getCompanyByCIN(cin);
+            
+            if (mcaResult.success) {
+                const formatted = mcaService.formatForAssessment(mcaResult);
+                console.log(`[MCA Direct] ✅ Retrieved official data for ${entityName}`);
+                
+                // Use MCA data (100% complete and accurate)
+                companyStatus = formatted.status;
+                companyAddress = formatted.registered_address;
+                companyClass = formatted.company_class;
+                authorizedCapital = formatted.authorized_capital;
+                paidUpCapital = formatted.paidup_capital;
+                dateOfIncorporation = formatted.registration_date;
+                companyROC = formatted.roc;
+                mcaDataUsed = true;
+                indianDataFound = true;
+            }
+        } catch (mcaError) {
+            console.error(`[MCA Direct] Failed for CIN ${cin}:`, mcaError.message);
+        }
+    }
+    
+    // PRIORITY 2: Groq→MCA Pipeline - Use Groq to find CIN, then query MCA
     if (!indianDataFound && process.env.GROQ_API_KEY) {
         try {
-            console.log(`[Groq Fallback] No CIN data for ${entityName}, trying Groq AI...`);
+            console.log(`[Groq→MCA Pipeline] Step 1: Finding CIN for ${entityName} using Groq AI...`);
             const extractor = new GroqCompanyExtractor();
             const groqResult = await extractor.extractCompanyData(entityName);
             
             if (groqResult.success && groqResult.data) {
                 const groqData = groqResult.data;
-                console.log(`[Groq Fallback] ✅ Enhanced data for ${entityName}`);
                 
-                // Map Groq data to our structure
-                cin = groqData.cin !== 'Not available' ? groqData.cin : cin;
-                companyStatus = groqData.status !== 'Not available' ? groqData.status : companyStatus;
-                companyAddress = groqData.address !== 'Not available' ? groqData.address : companyAddress;
-                companyEmail = groqData.email !== 'Not available' ? groqData.email : companyEmail;
-                companyPhone = groqData.phone !== 'Not available' ? groqData.phone : companyPhone;
-                companyPAN = groqData.pan !== 'Not available' ? groqData.pan : companyPAN;
-                authorizedCapital = groqData.authorized_capital !== 'Not available' ? groqData.authorized_capital : authorizedCapital;
-                paidUpCapital = groqData.paid_up_capital !== 'Not available' ? groqData.paid_up_capital : paidUpCapital;
-                dateOfIncorporation = groqData.registration_date !== 'Not available' ? groqData.registration_date : dateOfIncorporation;
-                companyROC = groqData.roc !== 'Not available' ? groqData.roc : companyROC;
-                companyClass = groqData.company_class !== 'Not available' ? groqData.company_class : companyClass;
-                financialYear = groqData.financial_year !== 'Not available' ? groqData.financial_year : financialYear;
+                // Step 1: Check if Groq found a CIN
+                const groqCIN = groqData.cin !== 'Not available' ? groqData.cin : null;
                 
-                // Directors
-                if (groqData.directors && Array.isArray(groqData.directors) && groqData.directors.length > 0) {
-                    companyDirectors = groqData.directors.filter(d => d.name && d.name !== 'Unknown');
+                // Step 2: If CIN found, query MCA RoC API
+                if (groqCIN && mcaService.isAvailable()) {
+                    console.log(`[Groq→MCA Pipeline] Step 2: Found CIN ${groqCIN}, querying MCA RoC API...`);
+                    const mcaResult = await mcaService.getCompanyByCIN(groqCIN);
+                    
+                    if (mcaResult.success) {
+                        const formatted = mcaService.formatForAssessment(mcaResult);
+                        console.log(`[Groq→MCA Pipeline] ✅ Retrieved official data for ${entityName}`);
+                        
+                        // Use MCA data (Priority: 100% accurate government data)
+                        cin = groqCIN;
+                        companyStatus = formatted.status;
+                        companyAddress = formatted.registered_address;
+                        companyClass = formatted.company_class;
+                        authorizedCapital = formatted.authorized_capital;
+                        paidUpCapital = formatted.paidup_capital;
+                        dateOfIncorporation = formatted.registration_date;
+                        companyROC = formatted.roc;
+                        mcaDataUsed = true;
+                        indianDataFound = true;
+                    } else {
+                        console.log(`[Groq→MCA Pipeline] ⚠️ CIN ${groqCIN} not in MCA database, using Groq data`);
+                    }
                 }
                 
-                // Revenue from Groq
-                if (groqData.latest_revenue && groqData.latest_revenue !== 'Not available' && !revenue) {
-                    // Parse revenue from Groq format (e.g., "₹1.87 Crore")
-                    const revenueMatch = groqData.latest_revenue.match(/₹\s*([\d.]+)\s*Crore/i);
-                    if (revenueMatch) {
-                        const crores = parseFloat(revenueMatch[1]);
-                        revenueINR = crores;
-                        revenue = crores / 83; // Convert to USD millions (approx)
-                        revenueDisplay = groqData.latest_revenue;
-                        revenueSource = 'Groq AI (Web Search)';
-                        console.log(`[Revenue] ${entityName}: $${revenue.toFixed(2)}M (from Groq AI: ${revenueDisplay})`);
+                // PRIORITY 3: If no MCA data, use Groq data directly
+                if (!mcaDataUsed) {
+                    console.log(`[Groq Direct] Using Groq AI data for ${entityName}`);
+                    
+                    // Map Groq data to our structure
+                    cin = groqCIN || cin;
+                    companyStatus = groqData.status !== 'Not available' ? groqData.status : companyStatus;
+                    companyAddress = groqData.address !== 'Not available' ? groqData.address : companyAddress;
+                    companyEmail = groqData.email !== 'Not available' ? groqData.email : companyEmail;
+                    companyPhone = groqData.phone !== 'Not available' ? groqData.phone : companyPhone;
+                    companyPAN = groqData.pan !== 'Not available' ? groqData.pan : companyPAN;
+                    authorizedCapital = groqData.authorized_capital !== 'Not available' ? groqData.authorized_capital : authorizedCapital;
+                    paidUpCapital = groqData.paid_up_capital !== 'Not available' ? groqData.paid_up_capital : paidUpCapital;
+                    dateOfIncorporation = groqData.registration_date !== 'Not available' ? groqData.registration_date : dateOfIncorporation;
+                    companyROC = groqData.roc !== 'Not available' ? groqData.roc : companyROC;
+                    companyClass = groqData.company_class !== 'Not available' ? groqData.company_class : companyClass;
+                    financialYear = groqData.financial_year !== 'Not available' ? groqData.financial_year : financialYear;
+                    
+                    // Directors
+                    if (groqData.directors && Array.isArray(groqData.directors) && groqData.directors.length > 0) {
+                        companyDirectors = groqData.directors.filter(d => d.name && d.name !== 'Unknown');
+                    }
+                    
+                    // Revenue from Groq - Enhanced parsing for multiple formats
+                    if (!revenue) {
+                        // Try revenue_usd_millions first (if Groq found USD)
+                        if (groqData.revenue_usd_millions && groqData.revenue_usd_millions !== 'Not available') {
+                            const usdRevenue = parseFloat(groqData.revenue_usd_millions);
+                            if (!isNaN(usdRevenue) && usdRevenue > 0) {
+                                revenue = usdRevenue;
+                                revenueINR = usdRevenue * 83; // Convert to INR Crores
+                                revenueDisplay = `$${usdRevenue}M USD (₹${revenueINR.toFixed(2)} Crore)`;
+                                revenueSource = 'Groq AI (Web Search - USD)';
+                                financialYear = groqData.financial_year !== 'Not available' ? groqData.financial_year : financialYear;
+                                console.log(`[Revenue] ${entityName}: $${revenue}M (FY: ${financialYear || 'Unknown'}) from Groq AI`);
+                            }
+                        }
+                        
+                        // Try latest_revenue in INR Crores
+                        if (!revenue && groqData.latest_revenue && groqData.latest_revenue !== 'Not available') {
+                            // Parse multiple formats: "₹1.87 Crore", "1.87 Crore", "187 Lakh", "18.7 Million"
+                            let crores = null;
+                            
+                            // Format 1: "₹1.87 Crore" or "1.87 Crore"
+                            const croreMatch = groqData.latest_revenue.match(/₹?\s*([\d.,]+)\s*Crore/i);
+                            if (croreMatch) {
+                                crores = parseFloat(croreMatch[1].replace(/,/g, ''));
+                            }
+                            
+                            // Format 2: "₹187 Lakh" or "187 Lakh"
+                            if (!crores) {
+                                const lakhMatch = groqData.latest_revenue.match(/₹?\s*([\d.,]+)\s*Lakh/i);
+                                if (lakhMatch) {
+                                    const lakhs = parseFloat(lakhMatch[1].replace(/,/g, ''));
+                                    crores = lakhs / 100; // Convert Lakh to Crore
+                                }
+                            }
+                            
+                            // Format 3: "$X Million" or "X Million USD"
+                            if (!crores) {
+                                const millionMatch = groqData.latest_revenue.match(/\$?\s*([\d.,]+)\s*Million/i);
+                                if (millionMatch) {
+                                    const millions = parseFloat(millionMatch[1].replace(/,/g, ''));
+                                    crores = millions * 8.3; // $1M ≈ ₹8.3 Crore
+                                    revenue = millions; // Already in USD millions
+                                }
+                            }
+                            
+                            if (crores && !revenue) {
+                                revenueINR = crores;
+                                revenue = crores / 83; // Convert INR Crores to USD millions
+                                revenueDisplay = groqData.latest_revenue;
+                                revenueSource = 'Groq AI (Web Search - INR)';
+                                financialYear = groqData.financial_year !== 'Not available' ? groqData.financial_year : financialYear;
+                                console.log(`[Revenue] ${entityName}: ₹${revenueINR.toFixed(2)}Cr ($${revenue.toFixed(2)}M) (FY: ${financialYear || 'Unknown'}) from Groq AI`);
+                            }
+                        }
                     }
                 }
             }
         } catch (groqError) {
-            console.error(`[Groq Fallback] Failed for ${entityName}:`, groqError.message);
-            // Continue without Groq data
+            console.error(`[Groq→MCA Pipeline] Failed for ${entityName}:`, groqError.message);
+            // Continue to base defaults
         }
     }
     
-    // If still no data found, set base defaults for new/unknown companies
+    // PRIORITY 4: Base defaults for new/unknown companies
     const hasMinimalData = !cin && !revenue && companyDirectors.length === 0;
     if (hasMinimalData) {
         console.log(`[Base Defaults] Setting defaults for ${entityName} (limited data available)`);
@@ -602,14 +714,24 @@ async function analyzeEntity(entityName, jobId) {
     const dimensions = scoreDimensions(data, tier, industry, businessModel, companyData);
     const score = calculateOverallScore(dimensions, tier);
     
-    // Adjust rating description for limited data scenarios
+    // Determine data quality and source
     let dataQuality = 'complete';
-    if (hasMinimalData) {
+    let dataSource = 'Multiple Sources';
+    
+    if (mcaDataUsed) {
+        dataQuality = 'complete';
+        dataSource = 'MCA RoC API (Official Government Database)';
+        dimensions.notes = 'Data verified from official MCA (Ministry of Corporate Affairs) government database.';
+    } else if (hasMinimalData) {
         dataQuality = 'limited';
+        dataSource = 'Base Defaults';
         dimensions.notes = 'Rating based on available public data and reasonable assumptions. Actual company details may vary.';
     } else if (!cin) {
         dataQuality = 'partial';
-        dimensions.notes = 'Rating based on publicly available information. MCA data not found.';
+        dataSource = indianDataFound ? 'Legacy CIN Lookup' : 'Groq AI + Web Search';
+        dimensions.notes = 'Rating based on publicly available information. Official MCA registration data not found.';
+    } else {
+        dataSource = indianDataFound ? 'Legacy CIN Lookup' : 'Groq AI + Web Search';
     }
     
     return {
@@ -638,6 +760,7 @@ async function analyzeEntity(entityName, jobId) {
         score: score,
         scoring_points: dimensions,
         data_quality: dataQuality,
+        data_source: dataSource,
         raw_data: data
     };
 }
